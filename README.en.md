@@ -2,7 +2,7 @@
 
 [中文](README.md) | **English**
 
-My personal collection of Codex skills. Future custom skills live in this repository, each in its own directory.
+My personal collection of Codex skills. All custom skills live in a dedicated top-level directory in this repository; `~/.codex/skills/` is the local installed copy.
 
 ## Available skills
 
