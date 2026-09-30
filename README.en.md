@@ -8,7 +8,23 @@ My personal collection of Codex skills. Future custom skills live in this reposi
 
 | Skill | Purpose |
 | --- | --- |
+| [gzh-webchat-cover](gzh-webchat-cover/SKILL.md) | Turn long Chinese article titles into cinematic, product-tech, or editorial-diagram covers |
 | [md-wechat-layout](md-wechat-layout/SKILL.md) | Convert Obsidian / Markdown articles into rich-text HTML for WeChat Official Accounts |
+
+## WeChat article covers
+
+`gzh-webchat-cover` extracts the subject, action, visible result, and emotion from a title, then compresses the article into one visual proposition. It selects a composition mode for creative work, product technology, feature comparisons, tutorials, industry analysis, or mechanism explainers.
+
+- Outputs a `900 × 383` landscape PNG by default.
+- Generates a text-free background first, then adds reliable Chinese typography with a helper script.
+- Includes 12 reference covers, title-to-cover mappings, and a distilled visual guide.
+- Keeps the visual claim within what the article actually demonstrates.
+
+Invoke it in Codex:
+
+```text
+$gzh-webchat-cover Create a WeChat article cover from my title and article summary
+```
 
 ## WeChat article layout
 
