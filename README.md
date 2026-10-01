@@ -10,6 +10,7 @@
 | --- | --- |
 | [gzh-webchat-cover](gzh-webchat-cover/SKILL.md) | 将公众号长标题转译成电影场景、品牌科技图或编辑图解风格的横版封面 |
 | [md-wechat-layout](md-wechat-layout/SKILL.md) | 将 Obsidian / Markdown 文章排版成可复制到微信公众号的富文本 |
+| [gzh-final-check](gzh-final-check/SKILL.md) | 公众号最终定稿检查，校对错字病句、四层 AI 味、实测表述和媒体引用；默认只检查 |
 
 ## 公众号封面
 
