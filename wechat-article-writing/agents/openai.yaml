@@ -1,0 +1,4 @@
+interface:
+  display_name: "程序员拾梦公众号写作"
+  short_description: "策划案例、依据真实实测写正文，保留作者口吻并支持定向改稿和四层自检"
+  default_prompt: "使用 $wechat-article-writing 根据我的素材和实测结果写公众号正文，保持真实、具体，并完成交稿自检。"
