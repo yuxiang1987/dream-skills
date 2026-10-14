@@ -117,18 +117,8 @@ export function convert(input, { theme = 'mist-blue', vault, fontSize = 16, link
     custom.preCode = 'color:#34413c;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;';
     const renderTheme = { ...selected, codeTheme: 'light', codeChrome: 'mac' };
     let html = stripPreviewMeta(renderMarkdown(source, renderTheme, { fontSize, linkFootnotes, galleryMode: 'stack', macCode: true, plainInlineText: true, custom }));
-    // Mixed bold/plain runs can trigger WeChat's pasted-paragraph line detector.
-    // Promote emphasis to the paragraph and remove only strong wrappers.
-    html = html.replace(/<p style="([^"]*)">((?:(?!<\/p>)[\s\S])*?)<\/p>/g,
-      (_, paragraphStyle, text) => {
-        const strongStyle = text.match(/<strong style="([^"]*)">/)?.[1];
-        if (!strongStyle) return `<p style="${paragraphStyle}">${text}</p>`;
-        const emphasis = selected.id === 'mint-soda'
-          ? 'font-weight:400;color:#343b39;border-left:3px solid #9fdcc9;padding-left:12px;text-align:left'
-          : strongStyle.split(';').filter(property => /^(font-weight|color):/.test(property)).join(';');
-        const content = text.replace(/<strong\b[^>]*>|<\/strong>/g, '');
-        return `<p style="${paragraphStyle}${emphasis};">${content}</p>`;
-      });
+    // Keep Markdown emphasis inline. A fully bold paragraph is still ordinary
+    // body copy; only an explicit Markdown blockquote should become a card.
     if (/\$\$|\$[^\n$]+\$/.test(source)) warnings.push('数学公式未转换为图片，请检查预览。');
     if (selected.id === 'mint-soda') html = html.replace(/<(th|td) style="([^"]*)">/g, '<$1 style="$2min-width:5.5em;">');
     if (mistBlue) {

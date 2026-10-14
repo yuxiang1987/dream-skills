@@ -27,15 +27,25 @@ test('两种主题保留正文、内联样式、代码高亮，外链转参考�
   assert.notEqual(convert(input).html, convert(input, { theme: '薄荷气泡' }).html);
   assert.doesNotMatch(convert(input).html, /参考资料/);
   assert.match(convert(input).html, /font-size:16px;line-height:30.4px/);
-  assert.match(convert(input, { theme: '青山绿水' }).html, /<p[^>]*font-weight:700[^>]*>正文 强调<\/p>/);
+  assert.match(convert(input, { theme: '青山绿水' }).html, /<p[^>]*>正文 <strong[^>]*>强调<\/strong><\/p>/);
   assert.equal(convert(input).theme, '雾蓝气泡');
-  assert.match(convert(input).html, /background-color:#f0f5fa;border:1px dashed #b8cee2/);
+  assert.doesNotMatch(convert(input).html, /background-color:#f0f5fa;border:1px dashed #b8cee2/);
   assert.match(convert(input).html, /color:#315b83/);
   assert.equal(convert(input).html, convert(input, { theme: '雾蓝气泡' }).html);
-  assert.doesNotMatch(convert(input).html, /<strong/);
+  assert.match(convert(input).html, /<strong/);
   const mint = convert(input, { theme: '薄荷气泡' }).html;
   assert.match(mint, /<h2[^>]*font-size:18.4px;line-height:34.96px;[^>]*>✧ 小节<\/h2>/);
   assert.doesNotMatch(mint, /<h2[^>]*><span/);
+});
+
+test('整段加粗保留普通粗体，只有显式引用使用引用容器', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wechat-bold-'));
+  const input = path.join(dir, '文章.md');
+  fs.writeFileSync(input, '**整段加粗**\n\n> 真正引用');
+  const html = convert(input).html;
+  assert.match(html, /<p[^>]*><strong[^>]*>整段加粗<\/strong><\/p>/);
+  assert.doesNotMatch(html, /<p[^>]*background-color:#f0f5fa[^>]*>整段加粗<\/p>/);
+  assert.match(html, /<blockquote/);
 });
 
 test('Obsidian图片找到库附件并内嵌，缺失及重名报错', () => {
