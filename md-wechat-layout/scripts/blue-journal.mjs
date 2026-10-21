@@ -1,27 +1,29 @@
 // 洛洛AI说参考版式的蓝色变体；编号以文字生成，不依赖原文图片。
+const WECHAT_FONT = `"PingFang SC NEW",system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue","Hiragino Sans GB","Microsoft YaHei UI","Microsoft YaHei",Arial,sans-serif`;
+
 export const blueJournal = {
   id: 'blue-journal',
   name: '晴蓝手记',
-  primary: '#397bb5',
+  primary: '#35a9ff',
   font: 'sans',
   extractH2Index: true,
   autoH2Index: true,
   separateH2Index: true,
   styles: (primary, size, font) => ({
-    container: `font-family:${font};font-size:${size}px;line-height:1.75;color:#1a1a1a;letter-spacing:1px;padding:0;word-break:break-word;overflow-wrap:anywhere;`,
+    container: `font-family:${WECHAT_FONT};font-size:${size}px;line-height:1.6;color:#1a1a1a;letter-spacing:1px;padding:0;word-break:break-word;overflow-wrap:anywhere;`,
     h1: `font-size:${size * 1.5}px;line-height:${size * 2.2}px;font-weight:700;text-align:center;color:#222222;margin:24px 10px;`,
     h2: `font-size:${size * 1.25}px;line-height:${size * 2}px;font-weight:700;text-align:center;color:#333333;margin:0 10px 24px;padding:0;border:none;`,
-    h2Index: `font-family:Arial,Helvetica,sans-serif;font-size:${size * 4.5}px;line-height:${size * 5.25}px;font-weight:700;font-style:italic;text-align:center;color:#91bfe3;margin:32px 0 8px;letter-spacing:-2px;`,
+    h2Index: `font-family:Arial,Helvetica,sans-serif;font-size:${size * 4.5}px;line-height:${size * 5.25}px;font-weight:700;font-style:italic;text-align:center;color:#7dccff;margin:32px 0 8px;letter-spacing:-2px;`,
     h3: `font-size:${size * 1.125}px;line-height:${size * 1.875}px;font-weight:700;color:#333333;margin:28px 10px 16px;padding:0;border:none;`,
     h4: `font-size:${size}px;line-height:${size * 1.75}px;font-weight:700;color:#333333;margin:24px 10px 16px;`,
     p: 'margin:0 10px 24px;text-align:left;text-indent:0;',
     liP: 'margin:0 0 8px;text-align:left;text-indent:0;',
     strong: 'font-weight:700;color:#1a1a1a;',
-    mark: 'background-color:#dfedfa;color:#1a1a1a;padding:0;border-radius:0;',
-    blockquote: `margin:24px 10px;padding:12px 16px;background-color:#f3f7fc;border-left:3px solid #91bfe3;border-radius:0;color:#4c6072;`,
+    mark: 'background-color:#e3f4ff;color:#1a1a1a;padding:0;border-radius:0;',
+    blockquote: `margin:24px 10px;padding:12px 16px;background-color:#f3faff;border-left:3px solid #7dccff;border-radius:0;color:#4c6072;`,
     bqP: 'margin:0;text-indent:0;text-align:left;',
     hr: 'border:none;border-top:1px solid #e7edf3;margin:32px 10px;',
-    th: 'border:1px solid #d5e3f0;padding:8px 12px;background-color:#edf4fb;font-weight:700;text-align:left;',
-    td: 'border:1px solid #d5e3f0;padding:8px 12px;text-align:left;',
+    th: 'border:1px solid #cfeaff;padding:8px 12px;background-color:#ecf8ff;font-weight:700;text-align:left;',
+    td: 'border:1px solid #cfeaff;padding:8px 12px;text-align:left;',
   }),
 };

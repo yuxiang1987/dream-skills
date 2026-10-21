@@ -102,7 +102,7 @@ export function convert(input, { theme = 'mist-blue', vault, fontSize = 16, link
     }
     for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] = `${withoutTextMetrics(custom[key])}font-size:${fontSize}px;line-height:${fontSize * 1.9}px;`;
     if (selected.id === 'blue-journal') {
-      for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] = `${withoutTextMetrics(custom[key])}font-size:${fontSize}px;line-height:${fontSize * 1.75}px;`;
+      for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] = `${withoutTextMetrics(custom[key])}font-size:${fontSize}px;line-height:${Number((fontSize * 1.6).toFixed(2))}px;`;
       for (const key of ['th', 'td']) custom[key] += 'font-size:14px;line-height:26px;overflow-wrap:break-word;';
     }
     if (selected.id === 'mint-soda') for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] += 'text-align:left;';
