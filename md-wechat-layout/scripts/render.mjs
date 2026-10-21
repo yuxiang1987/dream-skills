@@ -122,6 +122,9 @@ export function convert(input, { theme = 'mist-blue', vault, fontSize = 16, link
     custom.preLabel = "font-family:Menlo,Consolas,monospace;color:#75827e;font-size:12px;line-height:20px;margin-left:10px;vertical-align:middle;";
     custom.preBody = 'background-color:#ffffff;padding:14px 16px;margin:0;overflow-x:auto;';
     custom.preCode = 'color:#34413c;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;';
+    if (selected.id === 'blue-journal') {
+      for (const key of ['pre', 'preHeader', 'preLabel']) custom[key] = base[key];
+    }
     const renderTheme = { ...selected, codeTheme: 'light', codeChrome: 'mac' };
     let html = stripPreviewMeta(renderMarkdown(source, renderTheme, { fontSize, linkFootnotes, galleryMode: 'stack', macCode: true, plainInlineText: true, custom }));
     // Keep Markdown emphasis inline. A fully bold paragraph is still ordinary

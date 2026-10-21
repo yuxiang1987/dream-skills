@@ -35,7 +35,7 @@ The default **Mist Blue Bubble** style uses system sans-serif fonts, four-point 
 - Resolve and embed local Obsidian images with small rounded corners and soft shadows.
 - Render fenced code in light browser-style windows; previews scroll, while copied content remains fully expanded.
 - Convert links and inline code to display text by default, without adding references.
-- Blue Journal uses the WeChat system font stack, 16px body text, 25.6px line height, 1px letter spacing, and brighter sky blue accents.
+- Blue Journal uses the WeChat system font stack, 16px body text, 25.6px line height, 1px letter spacing, brighter sky blue accents, and pale blue prompt/code window headers.
 - Keep the source Markdown unchanged; compatibility formatting may extend emphasis to an entire paragraph.
 
 ### Installation

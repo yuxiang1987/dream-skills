@@ -13,18 +13,35 @@ function article(t, source) {
   return input;
 }
 
+test('晴蓝手记提示词和代码窗口采用浅蓝标题栏，其他主题保留浅灰栏', t => {
+  const input = article(t, '```提示词\n拿出全部本事。\n```\n\n```js\nconst value = 1;\n```');
+  const html = convert(input, { theme: '晴蓝手记' }).html;
+  assert.equal((html.match(/background-color:#e1f3ff/g) || []).length, 2);
+  assert.match(html, /color:#4c87b3[^>]*>提示词<\/span>/);
+  assert.match(html, /background-color:#ffffff;padding:14px 16px/);
+  assert.match(html, /background-color:#ff5f56/);
+  assert.match(html, /拿出全部本事。/);
+  assert.match(html, /const/);
+  assert.doesNotMatch(html, /background-color:#f4f6f5/);
+  for (const theme of ['雾蓝气泡', '薄荷气泡', '青山绿水']) {
+    const legacy = convert(input, { theme }).html;
+    assert.match(legacy, /background-color:#f4f6f5/);
+    assert.doesNotMatch(legacy, /background-color:#e1f3ff/);
+  }
+});
+
 test('晴蓝手记保留内容和源文，编号分块，只有显式高亮铺浅蓝底', t => {
   const source = '# 演示标题\n\n普通正文 **黑色粗体** 与 ==跨行也保留的浅蓝重点==。\n\n## 开始实操\n\n段落内容\n\n### 局部细节\n\n## 02 观察结果\n\n> 引用说明\n\n| 项目 | 结果 |\n| --- | --- |\n| 配色 | 蓝色 |\n\n```js\nconst value = 1;\n```';
   const input = article(t, source);
   const { html, theme } = convert(input, { theme: '晴蓝手记' });
   assert.equal(theme, '晴蓝手记');
   assert.equal(fs.readFileSync(input, 'utf8'), source);
-  assert.match(html, /<p[^>]*font-size:72px;line-height:84px[^>]*color:#7dccff[^>]*>01<\/p><h2/);
+  assert.match(html, /<p[^>]*font-size:72px;line-height:84px[^>]*color:#8dd6ff[^>]*>01<\/p><h2/);
   assert.match(html, /<h2[^>]*>开始实操<\/h2><\/section>/);
   assert.match(html, />02<\/p><h2[^>]*>观察结果<\/h2>/);
   assert.equal((html.match(/aria-hidden="true"/g) || []).length, 2);
   assert.match(html, /<strong[^>]*color:#1a1a1a[^>]*>黑色粗体<\/strong>/);
-  assert.match(html, /<mark[^>]*background-color:#e3f4ff[^>]*font-size:inherit[^>]*>跨行也保留的浅蓝重点<\/mark>/);
+  assert.match(html, /<mark[^>]*background-color:#e8f7ff[^>]*font-size:inherit[^>]*>跨行也保留的浅蓝重点<\/mark>/);
   assert.match(html, /<p[^>]*font-size:16px;line-height:25.6px/);
   assert.match(html, /<blockquote/);
   assert.match(html, /<table/);
@@ -54,7 +71,7 @@ test('旧主题继续不自动编号，普通加粗不产生高亮', t => {
   assert.equal(convert(input).theme, '雾蓝气泡');
   for (const theme of ['雾蓝气泡', '薄荷气泡', '青山绿水']) {
     const html = convert(input, { theme }).html;
-    assert.doesNotMatch(html, /aria-hidden="true"|>01<|#7dccff|#e3f4ff/);
+    assert.doesNotMatch(html, /aria-hidden="true"|>01<|#8dd6ff|#e8f7ff/);
   }
   assert.doesNotMatch(convert(input, { theme: '晴蓝手记' }).html, /<mark/);
 });
