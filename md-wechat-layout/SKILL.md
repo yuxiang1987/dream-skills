@@ -1,9 +1,11 @@
 ---
 name: md-wechat-layout
-description: 将 Obsidian 或普通 Markdown 文章排版为可复制到微信公众号草稿正文的富文本 HTML，默认使用雾蓝气泡（四芒星标题、浅蓝虚线卡片），也支持青绿山水与薄荷气泡主题。用于公众号排版、微信 HTML 导出，不负责改写文章或自动发布。
+description: 将 Obsidian 或普通 Markdown 文章排版为可复制到微信公众号草稿正文的富文本 HTML，默认使用雾蓝气泡，也支持青绿山水、薄荷气泡与晴蓝手记（大号章节编号、浅蓝高亮）。用于公众号排版、微信 HTML 导出，不负责改写文章或自动发布。
 ---
 
 # 公众号排版
+
+新增可选主题「晴蓝手记」（`blue-journal`，别名「洛洛蓝」）：参考洛洛AI说文章的白底、黑字、居中小节标题和大号斜体章节编号，按用户要求改成蓝色。二级标题自动编号，`==高亮==` 使用浅蓝底，普通加粗仍为黑色粗体。需要这套蓝色参考版式时使用 `--theme "晴蓝手记"`，细节见 [晴蓝手记](references/blue-journal.md)；不改源文，不自动选择高亮文字，未指定主题仍使用雾蓝气泡。
 
 雾蓝气泡默认使用系统无衬线字体：苹方／微软雅黑及系统字体回退，正文与标题统一，代码窗口继续使用等宽字体。字号、行距不因换字体改变。不同设备的实际字体可能不同。
 
@@ -34,6 +36,7 @@ description: 将 Obsidian 或普通 Markdown 文章排版为可复制到微信�
    ```powershell
    node scripts/render.mjs "D:/Obsidian/文章.md" --vault "D:/Obsidian" --out "输出目录"
    node scripts/render.mjs "D:/Obsidian/文章.md" --theme "薄荷气泡" --vault "D:/Obsidian" --out "输出目录"
+   node scripts/render.mjs "D:/Obsidian/文章.md" --theme "晴蓝手记" --vault "D:/Obsidian" --out "输出目录"
    ```
 
    默认 16px，保留主题字体，单列图片，原文链接仅保留显示文字，不自动新增参考资料。只有用户要求外链转参考资料时才传 `--link-footnotes`；可用 `--font-size 18` 调整字号。默认输出文章旁的 `wechat-output`；遵守当前可写目录限制，必要时显式传入工作区输出目录。再次运行会覆盖同名输出，需要保留版本时换目录。

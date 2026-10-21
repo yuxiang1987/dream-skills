@@ -3,9 +3,10 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import MarkdownIt from 'markdown-it';
 import { themes, buildStyles } from '../assets/upstream/themes.js';
+import { blueJournal } from './blue-journal.mjs';
 import { renderMarkdown, stripPreviewMeta, setImageResolver } from '../assets/upstream/renderer.js';
 
-const aliases = { '青山绿水': 'cyan-scape', '青绿山水': 'cyan-scape', '薄荷气泡': 'mint-soda', '雾蓝': 'mist-blue', '雾蓝气泡': 'mist-blue' };
+const aliases = { '青山绿水': 'cyan-scape', '青绿山水': 'cyan-scape', '薄荷气泡': 'mint-soda', '雾蓝': 'mist-blue', '雾蓝气泡': 'mist-blue', '晴蓝手记': 'blue-journal', '洛洛蓝': 'blue-journal' };
 const mime = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' };
 const escape = s => s.replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 
@@ -41,8 +42,8 @@ export function normalizeObsidian(source, warnings = []) {
 
 export function convert(input, { theme = 'mist-blue', vault, fontSize = 16, linkFootnotes = false } = {}) {
   const mistBlue = (aliases[theme] || theme) === 'mist-blue';
-  const selected = themes.find(t => t.id === (mistBlue ? 'mint-soda' : (aliases[theme] || theme)));
-  if (!selected || !['cyan-scape', 'mint-soda'].includes(selected.id)) throw new Error(`不支持的主题：${theme}`);
+  const selected = [...themes, blueJournal].find(t => t.id === (mistBlue ? 'mint-soda' : (aliases[theme] || theme)));
+  if (!selected || !['cyan-scape', 'mint-soda', 'blue-journal'].includes(selected.id)) throw new Error(`不支持的主题：${theme}`);
   if (!Number.isFinite(fontSize) || fontSize < 12 || fontSize > 24) throw new Error('字号须为 12–24');
   const warnings = [];
   const source = normalizeObsidian(fs.readFileSync(input, 'utf8'), warnings);
@@ -100,12 +101,18 @@ export function convert(input, { theme = 'mist-blue', vault, fontSize = 16, link
       for (const key of ['th', 'td']) custom[key] += 'font-size:14px;line-height:26px;word-break:normal;overflow-wrap:break-word;';
     }
     for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] = `${withoutTextMetrics(custom[key])}font-size:${fontSize}px;line-height:${fontSize * 1.9}px;`;
+    if (selected.id === 'blue-journal') {
+      for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] = `${withoutTextMetrics(custom[key])}font-size:${fontSize}px;line-height:${fontSize * 1.75}px;`;
+      for (const key of ['th', 'td']) custom[key] += 'font-size:14px;line-height:26px;overflow-wrap:break-word;';
+    }
     if (selected.id === 'mint-soda') for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] += 'text-align:left;';
     for (const key of ['strong', 'em', 's', 'mark', 'a', 'code']) {
       custom[key] = `${withoutTextMetrics(custom[key])}font-family:inherit;font-size:inherit;line-height:inherit;vertical-align:baseline;`;
     }
     custom.code += 'font-weight:inherit;';
-    const imageFinish = selected.id === 'mint-soda'
+    const imageFinish = selected.id === 'blue-journal'
+      ? 'border-radius:6px;box-shadow:0 5px 16px rgba(40,65,90,0.12),0 1px 4px rgba(40,65,90,0.06);'
+      : selected.id === 'mint-soda'
       ? 'border-radius:6px;box-shadow:0 3px 10px rgba(35,65,55,0.10),0 1px 3px rgba(35,65,55,0.05);'
       : 'border-radius:6px;box-shadow:0 5px 16px rgba(35,65,55,0.16),0 1px 4px rgba(35,65,55,0.08);';
     custom.img = `${base.img}${imageFinish}`;
@@ -161,7 +168,7 @@ function main() {
   const args = process.argv.slice(2);
   const input = args.shift();
   if (!input || input === '--help') {
-    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡] [--vault 库目录] [--out 输出目录] [--font-size 16] [--link-footnotes]'); return;
+    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 16] [--link-footnotes]'); return;
   }
   const options = {};
   let out = path.join(path.dirname(path.resolve(input)), 'wechat-output');

@@ -9,7 +9,7 @@
 | 技能 | 用途 |
 | --- | --- |
 | [gzh-webchat-cover](gzh-webchat-cover/SKILL.md) | 将公众号长标题转译成电影场景、品牌科技图或编辑图解风格的横版封面 |
-| [md-wechat-layout](md-wechat-layout/SKILL.md) | 将 Obsidian / Markdown 文章排版成可复制到微信公众号的富文本 |
+| [md-wechat-layout](md-wechat-layout/SKILL.md) | 将 Markdown 文章排版成公众号富文本，支持晴蓝手记大号编号与浅蓝高亮 |
 | [gzh-final-check](gzh-final-check/SKILL.md) | 公众号最终定稿检查，校对错字病句、四层 AI 味、可迁移套话与假洞察，复查过度改稿、实测表述和媒体引用；默认只检查 |
 | [wechat-article-writing](wechat-article-writing/SKILL.md) | 程序员拾梦公众号案例策划、正文写作和定向改稿，基于真实实测并做四层自检 |
 
@@ -30,7 +30,7 @@ $gzh-webchat-cover 根据文章标题和正文要点生成公众号横版封面
 
 ## 公众号排版
 
-默认使用「雾蓝气泡」：系统无衬线字体、四芒星标题、浅蓝底虚线卡片。也支持「青山绿水」与绿色「薄荷气泡」。
+默认使用「雾蓝气泡」：系统无衬线字体、四芒星标题、浅蓝底虚线卡片。也支持「青山绿水」、绿色「薄荷气泡」与「晴蓝手记」：白底黑字、大号浅蓝斜体章节编号、居中黑色小节标题、浅蓝行内高亮。晴蓝手记自动给二级标题编号，`==文字==` 控制高亮，普通加粗保持黑色粗体；[主题说明](md-wechat-layout/references/blue-journal.md)。
 
 - 解析 Obsidian 本地图片，内嵌附件，统一小圆角和柔和阴影。
 - 围栏代码使用浅色浏览器窗口；预览限高并滚动，复制时保留完整内容。
@@ -51,7 +51,7 @@ npm ci
 $md-wechat-layout 给 /你的路径/文章.md 做公众号排版
 ```
 
-不声明主题时使用雾蓝气泡，也可以明确指定「青山绿水」或「薄荷气泡」。
+不声明主题时使用雾蓝气泡，也可以明确指定「青山绿水」、「薄荷气泡」或「晴蓝手记」（别名「洛洛蓝」）。
 
 ### 命令行使用
 
@@ -60,6 +60,7 @@ $md-wechat-layout 给 /你的路径/文章.md 做公众号排版
 ```sh
 node md-wechat-layout/scripts/render.mjs "文章.md" --vault "Obsidian库路径" --out "输出目录"
 node md-wechat-layout/scripts/render.mjs "文章.md" --theme "薄荷气泡" --vault "Obsidian库路径" --out "输出目录"
+node md-wechat-layout/scripts/render.mjs "文章.md" --theme "晴蓝手记" --vault "Obsidian库路径" --out "输出目录"
 ```
 
 输出 `.preview.html`、`.wechat.html` 和 `.report.json`。打开预览，点击「复制公众号排版」，粘贴到公众号草稿正文。复制 HTML 源码文本无法获得富文本排版。

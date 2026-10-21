@@ -9,7 +9,7 @@ My personal collection of Codex skills. All custom skills live in a dedicated to
 | Skill | Purpose |
 | --- | --- |
 | [gzh-webchat-cover](gzh-webchat-cover/SKILL.md) | Turn long Chinese article titles into cinematic, product-tech, or editorial-diagram covers |
-| [md-wechat-layout](md-wechat-layout/SKILL.md) | Convert Obsidian / Markdown articles into rich-text HTML for WeChat Official Accounts |
+| [md-wechat-layout](md-wechat-layout/SKILL.md) | Convert Markdown to WeChat rich text, including Blue Journal numbered sections and pale blue highlights |
 | [gzh-final-check](gzh-final-check/SKILL.md) | Review final WeChat article drafts for language, generic filler, faux insights, over-editing, test claims, and media integrity; read-only by default |
 | [wechat-article-writing](wechat-article-writing/SKILL.md) | Plan cases, write evidence-based AI articles, and revise drafts with scoped edits and four-layer editorial checks |
 
@@ -30,7 +30,7 @@ $gzh-webchat-cover Create a WeChat article cover from my title and article summa
 
 ## WeChat article layout
 
-The default **Mist Blue Bubble** style uses system sans-serif fonts, four-point star headings, and pale blue cards with dashed borders. **Cyan Landscape** and the green **Mint Soda** theme are also available.
+The default **Mist Blue Bubble** style uses system sans-serif fonts, four-point star headings, and pale blue cards with dashed borders. **Cyan Landscape**, green **Mint Soda**, and **Blue Journal** (`晴蓝手记`) are also available. Blue Journal uses black body text on white, large pale blue italic section numbers, centered black headings, and pale blue `==highlights==`. H2 headings receive numbers automatically; ordinary bold stays black. See the [theme reference](md-wechat-layout/references/blue-journal.md).
 
 - Resolve and embed local Obsidian images with small rounded corners and soft shadows.
 - Render fenced code in light browser-style windows; previews scroll, while copied content remains fully expanded.
@@ -51,7 +51,7 @@ npm ci
 $md-wechat-layout Format /your/path/article.md for a WeChat Official Account
 ```
 
-Omitting the theme selects Mist Blue Bubble. Explicit theme names accepted by the CLI include `雾蓝气泡` (Mist Blue Bubble), `青山绿水` (Cyan Landscape), and `薄荷气泡` (Mint Soda).
+Omitting the theme selects Mist Blue Bubble. Explicit theme names accepted by the CLI include `雾蓝气泡` (Mist Blue Bubble), `青山绿水` (Cyan Landscape), `薄荷气泡` (Mint Soda), and `晴蓝手记` (Blue Journal, alias `洛洛蓝`, ID `blue-journal`).
 
 ### CLI usage
 
@@ -60,6 +60,7 @@ Run from the repository root:
 ```sh
 node md-wechat-layout/scripts/render.mjs "article.md" --vault "Obsidian vault path" --out "output directory"
 node md-wechat-layout/scripts/render.mjs "article.md" --theme "薄荷气泡" --vault "Obsidian vault path" --out "output directory"
+node md-wechat-layout/scripts/render.mjs "article.md" --theme "晴蓝手记" --vault "Obsidian vault path" --out "output directory"
 ```
 
 The command generates `.preview.html`, `.wechat.html`, and `.report.json`. Open the preview, click its rich-text copy button, and paste into your WeChat draft body. Copying the HTML source as plain text will not preserve formatting.

@@ -465,18 +465,20 @@ function createMd(theme, opts) {
   // 只处理主题主动开启的纯文本前缀，不改变其他主题和无编号标题。
   if (theme.extractH2Index) {
     md.core.ruler.push('section_index', (state) => {
+      let sectionNumber = 0
       for (let i = 0; i < state.tokens.length - 1; i++) {
         const open = state.tokens[i]
         const inline = state.tokens[i + 1]
         if (open.type !== 'heading_open' || open.tag !== 'h2' || inline?.type !== 'inline') continue
 
         const firstText = inline.children?.find((child) => child.type === 'text' && child.content.trim())
-        if (!firstText) continue
-        const match = firstText.content.match(/^(\d{1,2})[.、]?\s+(.+)$/)
-        if (!match) continue
+        if (!firstText && !theme.autoH2Index) continue
+        const match = firstText?.content.match(/^(\d{1,2})[.、]?\s+(.+)$/)
+        sectionNumber++
+        if (!match && !theme.autoH2Index) continue
 
-        open.meta = { ...(open.meta || {}), sectionIndex: match[1].padStart(2, '0') }
-        firstText.content = match[2]
+        open.meta = { ...(open.meta || {}), sectionIndex: (match ? match[1] : String(sectionNumber)).padStart(2, '0') }
+        if (match) firstText.content = match[2]
       }
     })
   }
@@ -815,6 +817,9 @@ function createMd(theme, opts) {
         level
       ] || styles.h4
     const wrap = styles[`h${level}WrapOpen`] || ''
+    if (level === 2 && theme.separateH2Index && tokens[idx].meta?.sectionIndex) {
+      return `<section><p aria-hidden="true" style="${escapeHtmlAttr(styles.h2Index)}">${esc(tokens[idx].meta.sectionIndex)}</p><h2${dl(tokens[idx])} style="${escapeHtmlAttr(style)}">${wrap}`
+    }
     const sectionIndex =
       level === 2 && tokens[idx].meta?.sectionIndex && styles.h2Index
         ? `<span aria-hidden="true" style="${escapeHtmlAttr(styles.h2Index)}">${esc(tokens[idx].meta.sectionIndex)}</span>`
@@ -824,7 +829,8 @@ function createMd(theme, opts) {
   md.renderer.rules.heading_close = (tokens, idx) => {
     const level = Number(tokens[idx].tag.slice(1))
     const wrap = styles[`h${level}WrapClose`] || ''
-    return `${wrap}</h${level}>`
+    const closeSection = level === 2 && theme.separateH2Index && tokens[idx - 2]?.meta?.sectionIndex ? '</section>' : ''
+    return `${wrap}</h${level}>${closeSection}`
   }
 
   // 引用块装饰（bqWrapOpen/bqWrapClose）：主题可在引用卡首尾注入装饰 HTML
