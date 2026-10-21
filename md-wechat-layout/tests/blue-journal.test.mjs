@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { convert, preview } from '../scripts/render.mjs';
 
 function article(t, source) {
@@ -122,7 +124,7 @@ test('最后一节自动标小号END，标题和章节顺序保留，高亮恢�
 
 test('旧主题继续不自动编号，普通加粗不产生高亮', t => {
   const input = article(t, '## 开始\n\n**只加粗**');
-  assert.equal(convert(input).theme, '雾蓝气泡');
+  assert.equal(convert(input).theme, '晴蓝手记');
   for (const theme of ['雾蓝气泡', '薄荷气泡', '青山绿水']) {
     const html = convert(input, { theme }).html;
     assert.doesNotMatch(html, /aria-hidden="true"|>01<|#8dd6ff|#e8f7ff/);
@@ -142,4 +144,25 @@ test('晴蓝手记使用参考微信字体栈与1.6倍正文行高，保留等�
     assert.match(html, /<code[^>]*font-family:[^;]*(?:Menlo|Consolas|monospace)/);
     assert.doesNotMatch(html, /#91bfe3|#dfedfa|#397bb5/);
   }
+});
+
+
+test('省略主题的API与CLI均使用晴蓝手记，保留其他主题显式选择', t => {
+  const source = '## 开始\n\n==浅蓝重点==\n\n## 收尾';
+  const input = article(t, source);
+  const expected = convert(input, { theme: '晴蓝手记' });
+  assert.deepEqual(convert(input), expected);
+  assert.equal(expected.theme, '晴蓝手记');
+  assert.match(expected.html, /color:#8dd6ff/);
+  assert.match(expected.html, /background-color:#e8f7ff/);
+  assert.match(expected.html, />01<\/p>/);
+  assert.match(expected.html, />END<\/p>/);
+  const out = path.join(path.dirname(input), 'export');
+  const cli = fileURLToPath(new URL('../scripts/render.mjs', import.meta.url));
+  const result = JSON.parse(execFileSync(process.execPath, [cli, input, '--out', out], { encoding: 'utf8' }));
+  assert.equal(result.theme, '晴蓝手记');
+  assert.equal(fs.readFileSync(result.fragment, 'utf8'), expected.html);
+  assert.equal(JSON.parse(fs.readFileSync(result.report, 'utf8')).theme, '晴蓝手记');
+  assert.equal(fs.readFileSync(input, 'utf8'), source);
+  assert.notEqual(convert(input, { theme: '雾蓝气泡' }).html, expected.html);
 });

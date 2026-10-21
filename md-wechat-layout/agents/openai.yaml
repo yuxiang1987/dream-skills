@@ -1,4 +1,4 @@
 interface:
-  display_name: "公众号排版 · 雾蓝气泡"
-  short_description: "默认雾蓝气泡，支持晴蓝手记大号编号与浅蓝高亮等公众号主题"
-  default_prompt: "使用 $md-wechat-layout 将我的 Obsidian 文章排版为公众号富文本，未指定主题时使用雾蓝气泡。"
+  display_name: "公众号排版 · 晴蓝手记"
+  short_description: "默认晴蓝手记大号编号与浅蓝高亮，支持雾蓝气泡等公众号主题"
+  default_prompt: "使用 $md-wechat-layout 将我的 Obsidian 文章排版为公众号富文本，未指定主题时使用晴蓝手记。"
