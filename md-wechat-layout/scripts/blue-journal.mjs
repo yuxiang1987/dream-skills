@@ -11,6 +11,7 @@ export const blueJournal = {
   autoH2Index: true,
   separateH2Index: true,
   lastH2Index: 'END',
+  imageInsetPercent: 4,
   styles: (primary, size, font) => ({
     container: `font-family:${WECHAT_FONT};font-size:${size}px;line-height:1.6;color:#1a1a1a;letter-spacing:1px;padding:0;word-break:break-word;overflow-wrap:anywhere;`,
     h1: `font-size:${size * 1.5}px;line-height:${size * 2.2}px;font-weight:700;text-align:center;color:#222222;margin:24px 10px;`,
@@ -23,8 +24,8 @@ export const blueJournal = {
     liP: 'margin:0 0 8px;text-align:left;text-indent:0;',
     strong: 'font-weight:700;color:#1a1a1a;',
     mark: 'background-color:#e8f7ff;color:#1a1a1a;padding:0;border-radius:0;',
-    img: 'display:block;width:auto;height:auto;max-width:92%;margin:1.2em auto;',
-    galleryImg: 'display:block;width:auto;height:auto;max-width:92%;margin:1.2em auto;',
+    img: 'display:block;width:auto;height:auto;max-width:100%;margin:0 auto;',
+    galleryImg: 'display:block;width:auto;height:auto;max-width:100%;margin:0 auto;',
     blockquote: `margin:24px 10px;padding:12px 16px;background-color:#f3faff;border-left:3px solid #8dd6ff;border-radius:0;color:#4c6072;`,
     bqP: 'margin:0;text-indent:0;text-align:left;',
     hr: 'border:none;border-top:1px solid #e7edf3;margin:32px 10px;',

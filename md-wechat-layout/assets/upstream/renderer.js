@@ -624,8 +624,9 @@ function createMd(theme, opts) {
   // 公众号编辑器不执行固定高度裁剪，这样预览与粘贴后的效果保持一致。
   const galleryItemParts = (count, i, gw) => {
     if (galleryMode === 'stack') {
+      const inset = theme.imageInsetPercent ? `padding:0 ${theme.imageInsetPercent}%;box-sizing:border-box;` : ''
       return {
-        open: `<section style="margin:0 0 ${i === count - 1 ? '0' : '8px'};">`,
+        open: `<section style="margin:0 0 ${i === count - 1 ? '0' : '8px'};${inset}">`,
         close: '</section>',
         image: 'height:auto;box-sizing:border-box;',
       }
@@ -792,6 +793,14 @@ function createMd(theme, opts) {
     // 引用块 / 宽松列表项里的段落使用各自样式，避免普通正文的首行缩进、
     // 对齐和横向边距污染嵌套结构。
     const context = tokens[idx].meta?.blockContext
+    const children = tokens[idx + 1]?.children || []
+    const imageOnly = children.some(t => t.type === 'image') && children.every(t =>
+      t.type === 'image' || t.type === 'softbreak' || t.type === 'hardbreak' || (t.type === 'text' && !t.content.trim()))
+    if (theme.imageInsetPercent && imageOnly) {
+      for (const child of children) if (child.type === 'image') child.attrSet('data-image-inset', 'outer')
+      const paragraph = context === 'list' ? styles.liP : context === 'blockquote' ? styles.bqP : styles.p
+      return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(`${paragraph}margin:1.2em 0;padding:0 ${theme.imageInsetPercent}%;box-sizing:border-box;`)}">`
+    }
     if (context === 'list') return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(styles.liP)}">`
     if (context === 'blockquote') return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(styles.bqP)}">`
     return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(styles.p)}">`
@@ -921,7 +930,10 @@ function createMd(theme, opts) {
       const parts = galleryItemParts(count, i, gw)
       return `${parts.open}<img src="${src}" alt="${esc(alt)}"${titleAttr} decoding="async" style="${escapeHtmlAttr(`${styles.galleryImg}${parts.image}${grStyle}`)}"/>${parts.close}`
     }
-    const imgTag = `<img${dl(token)} src="${src}" alt="${esc(alt)}"${titleAttr} decoding="async" style="${escapeHtmlAttr(styles.img)}"/>`
+    const image = `<img${dl(token)} src="${src}" alt="${esc(alt)}"${titleAttr} decoding="async" style="${escapeHtmlAttr(styles.img)}"/>`
+    const imgTag = theme.imageInsetPercent && token.attrGet('data-image-inset') !== 'outer'
+      ? `<span style="display:block;margin:1.2em 0;padding:0 ${theme.imageInsetPercent}%;box-sizing:border-box;">${image}</span>`
+      : image
     if (!alt.trim() || /\.(?:png|jpe?g|gif|webp)$/i.test(alt.trim())) return imgTag
     return `${imgTag}<span style="${escapeHtmlAttr(styles.caption)}">${esc(alt)}</span>`
   }

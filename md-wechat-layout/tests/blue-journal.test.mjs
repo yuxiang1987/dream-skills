@@ -19,12 +19,22 @@ test('晴蓝手记图片居中内收，保留自然尺寸、比例与原图内�
   const filename = path.join(path.dirname(input), '图.png');
   fs.writeFileSync(filename, bytes);
   const html = convert(input, { theme: '晴蓝手记' }).html;
-  assert.match(html, /<img[^>]*style="[^"]*width:auto;height:auto;max-width:92%;margin:1.2em auto/);
+  assert.match(html, /<p[^>]*padding:0 4%;box-sizing:border-box;[^>]*><img/);
+  assert.match(html, /<img[^>]*style="[^"]*width:auto;height:auto;max-width:100%;margin:0 auto/);
   assert.match(html, /border-radius:6px/);
   assert.match(html, /box-shadow:/);
   assert.ok(html.includes(bytes.toString('base64')));
   assert.deepEqual(fs.readFileSync(filename), bytes);
-  assert.doesNotMatch(convert(input, { theme: '雾蓝气泡' }).html, /max-width:92%/);
+  assert.doesNotMatch(convert(input, { theme: '雾蓝气泡' }).html, /padding:0 4%/);
+  fs.writeFileSync(input, '![[图.png]]\n\n![[图.png]]');
+  const gallery = convert(input, { theme: '晴蓝手记' }).html;
+  assert.equal((gallery.match(/padding:0 4%;box-sizing:border-box/g) || []).length, 2);
+  fs.writeFileSync(input, '图片前\n![[图.png]]\n图片后');
+  const mixed = convert(input, { theme: '晴蓝手记' }).html;
+  assert.match(mixed, /<span[^>]*padding:0 4%;box-sizing:border-box;[^>]*><img/);
+  assert.match(mixed, /图片前/);
+  assert.match(mixed, /图片后/);
+  assert.equal((mixed.match(/padding:0 4%;box-sizing:border-box/g) || []).length, 1);
 });
 
 test('晴蓝手记提示词和代码窗口采用浅蓝标题栏，其他主题保留浅灰栏', t => {
