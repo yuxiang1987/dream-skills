@@ -38,10 +38,10 @@ test('晴蓝手记保留内容和源文，编号分块，只有显式高亮铺�
   assert.equal(fs.readFileSync(input, 'utf8'), source);
   assert.match(html, /<p[^>]*font-size:72px;line-height:84px[^>]*color:#8dd6ff[^>]*>01<\/p><h2/);
   assert.match(html, /<h2[^>]*>开始实操<\/h2><\/section>/);
-  assert.match(html, />02<\/p><h2[^>]*>观察结果<\/h2>/);
+  assert.match(html, />END<\/p><h2[^>]*>观察结果<\/h2>/);
   assert.equal((html.match(/aria-hidden="true"/g) || []).length, 2);
   assert.match(html, /<strong[^>]*color:#1a1a1a[^>]*>黑色粗体<\/strong>/);
-  assert.match(html, /<mark[^>]*background-color:#e8f7ff[^>]*font-size:inherit[^>]*>跨行也保留的浅蓝重点<\/mark>/);
+  assert.match(html, /<mark[^>]*background-color:#8dd6ff[^>]*font-size:inherit[^>]*>跨行也保留的浅蓝重点<\/mark>/);
   assert.match(html, /<p[^>]*font-size:16px;line-height:25.6px/);
   assert.match(html, /<blockquote/);
   assert.match(html, /<table/);
@@ -58,11 +58,33 @@ test('别名一致、重复渲染重置编号、格式化标题与多级标题�
   }
   assert.equal((expected.match(/aria-hidden="true"/g) || []).length, 3);
   assert.match(expected, />02<\/p><h2[^>]*>第二节<\/h2>/);
-  assert.match(expected, />03<\/p><h2[^>]*>最后一节<\/h2>/);
+  assert.match(expected, />END<\/p><h2[^>]*>最后一节<\/h2>/);
   assert.match(expected, /<h3[^>]*>不编号<\/h3>/);
   for (const fontSize of [12, 18, 24]) {
     const html = convert(input, { theme: '晴蓝手记', fontSize }).html;
     assert.match(html, new RegExp(`font-size:${fontSize * 4.5}px;line-height:${fontSize * 5.25}px`));
+  }
+});
+
+test('最后一节自动标END，标题原文和章节顺序保留，高亮与编号同色', t => {
+  const input = article(t, '## 第一节\n\n==重点==\n\n## 09 **收尾**\n\n### 补充细节');
+  const source = fs.readFileSync(input, 'utf8');
+  const html = convert(input, { theme: '晴蓝手记' }).html;
+  assert.match(html, />01<\/p><h2/);
+  assert.match(html, />END<\/p><h2[^>]*><strong[^>]*>收尾<\/strong><\/h2>/);
+  assert.doesNotMatch(html, />09<\/p>|>02<\/p>/);
+  assert.equal((html.match(/>END<\/p>/g) || []).length, 1);
+  assert.equal(fs.readFileSync(input, 'utf8'), source);
+  const numberColor = html.match(/<p[^>]*aria-hidden="true"[^>]*color:(#[0-9a-f]{6})/)[1];
+  const highlightColor = html.match(/<mark[^>]*background-color:(#[0-9a-f]{6})/)[1];
+  assert.equal(highlightColor, numberColor);
+  fs.writeFileSync(input, '## 只有一节');
+  assert.match(convert(input, { theme: '晴蓝手记' }).html, />END<\/p><h2[^>]*>只有一节/);
+  fs.writeFileSync(input, '正文\n\n### 只有三级标题');
+  assert.doesNotMatch(convert(input, { theme: '晴蓝手记' }).html, />END<\/p>/);
+  fs.writeFileSync(input, source);
+  for (const theme of ['雾蓝气泡', '薄荷气泡', '青山绿水']) {
+    assert.doesNotMatch(convert(input, { theme }).html, />END<\/p>/);
   }
 });
 

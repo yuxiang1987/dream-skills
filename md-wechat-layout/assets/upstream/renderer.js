@@ -466,6 +466,7 @@ function createMd(theme, opts) {
   if (theme.extractH2Index) {
     md.core.ruler.push('section_index', (state) => {
       let sectionNumber = 0
+      let lastHeading
       for (let i = 0; i < state.tokens.length - 1; i++) {
         const open = state.tokens[i]
         const inline = state.tokens[i + 1]
@@ -473,13 +474,15 @@ function createMd(theme, opts) {
 
         const firstText = inline.children?.find((child) => child.type === 'text' && child.content.trim())
         if (!firstText && !theme.autoH2Index) continue
-        const match = firstText?.content.match(/^(\d{1,2})[.、]?\s+(.+)$/)
+        const match = firstText?.content.match(/^(\d{1,2})[.、]?\s+(.*)$/)
         sectionNumber++
         if (!match && !theme.autoH2Index) continue
 
         open.meta = { ...(open.meta || {}), sectionIndex: (match ? match[1] : String(sectionNumber)).padStart(2, '0') }
+        lastHeading = open
         if (match) firstText.content = match[2]
       }
+      if (lastHeading && theme.lastH2Index) lastHeading.meta.sectionIndex = theme.lastH2Index
     })
   }
 
