@@ -820,12 +820,15 @@ function createMd(theme, opts) {
         level
       ] || styles.h4
     const wrap = styles[`h${level}WrapOpen`] || ''
+    const indexStyle = theme.lastH2Index && tokens[idx].meta?.sectionIndex === theme.lastH2Index
+      ? styles.h2EndIndex || styles.h2Index
+      : styles.h2Index
     if (level === 2 && theme.separateH2Index && tokens[idx].meta?.sectionIndex) {
-      return `<section><p aria-hidden="true" style="${escapeHtmlAttr(styles.h2Index)}">${esc(tokens[idx].meta.sectionIndex)}</p><h2${dl(tokens[idx])} style="${escapeHtmlAttr(style)}">${wrap}`
+      return `<section><p aria-hidden="true" style="${escapeHtmlAttr(indexStyle)}">${esc(tokens[idx].meta.sectionIndex)}</p><h2${dl(tokens[idx])} style="${escapeHtmlAttr(style)}">${wrap}`
     }
     const sectionIndex =
       level === 2 && tokens[idx].meta?.sectionIndex && styles.h2Index
-        ? `<span aria-hidden="true" style="${escapeHtmlAttr(styles.h2Index)}">${esc(tokens[idx].meta.sectionIndex)}</span>`
+        ? `<span aria-hidden="true" style="${escapeHtmlAttr(indexStyle)}">${esc(tokens[idx].meta.sectionIndex)}</span>`
         : ''
     return `<h${level}${dl(tokens[idx])} style="${escapeHtmlAttr(style)}">${sectionIndex}${wrap}`
   }
