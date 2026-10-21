@@ -11,7 +11,7 @@ export const blueJournal = {
   autoH2Index: true,
   separateH2Index: true,
   lastH2Index: 'END',
-  imageInsetPercent: 4,
+  imageSideMarginPx: 20,
   styles: (primary, size, font) => ({
     container: `font-family:${WECHAT_FONT};font-size:${size}px;line-height:1.6;color:#1a1a1a;letter-spacing:1px;padding:0;word-break:break-word;overflow-wrap:anywhere;`,
     h1: `font-size:${size * 1.5}px;line-height:${size * 2.2}px;font-weight:700;text-align:center;color:#222222;margin:24px 10px;`,
