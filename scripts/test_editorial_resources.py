@@ -19,7 +19,10 @@ class EditorialResourcesTest(unittest.TestCase):
                     if "://" in target or target.startswith("#"):
                         continue
                     with self.subTest(page=page, target=target):
-                        self.assertTrue((page.parent / target.split("#")[0]).is_file())
+                        resource = (page.parent / target.split("#")[0]).resolve()
+                        self.assertTrue(resource.is_relative_to((ROOT / name).resolve()),
+                                        "Installed skills must not depend on external local files")
+                        self.assertTrue(resource.is_file())
 
     def test_behavior_cases_are_discoverable(self):
         for name in SKILLS:
