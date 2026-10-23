@@ -10,8 +10,8 @@ My personal collection of Codex skills. All custom skills live in a dedicated to
 | --- | --- |
 | [gzh-webchat-cover](gzh-webchat-cover/SKILL.md) | Turn long Chinese article titles into cinematic, product-tech, or editorial-diagram covers |
 | [md-wechat-layout](md-wechat-layout/SKILL.md) | Convert Markdown to WeChat rich text, defaulting to Blue Journal numbered sections and pale blue highlights |
-| [gzh-final-check](gzh-final-check/SKILL.md) | Review final WeChat article drafts for language, generic filler, faux insights, over-editing, test claims, and media integrity; read-only by default |
-| [wechat-article-writing](wechat-article-writing/SKILL.md) | Plan cases, write evidence-based AI articles, and revise drafts with scoped edits and four-layer editorial checks |
+| [gzh-final-check](gzh-final-check/SKILL.md) | Review language, test claims, media integrity, case explanations, and reader promises; inspect covers and previews when supplied; read-only by default |
+| [wechat-article-writing](wechat-article-writing/SKILL.md) | Plan cases, gather genuine author reactions as needed, explain evidence-based judgments, and revise AI articles without concealing sponsored-content limitations |
 
 ## WeChat article covers
 
