@@ -1,4 +1,4 @@
-"""Check that the two editorial skills ship discoverable local resources.
+"""Check that the shipped skills expose discoverable local resources.
 
 Behavioral checks are the synthetic requests in each skill's tests/ directory;
 these automated checks verify packaging, not editorial judgment.
@@ -8,7 +8,8 @@ import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ("wechat-article-writing", "gzh-final-check")
+EDITORIAL_SKILLS = ("wechat-article-writing", "gzh-final-check")
+SKILLS = EDITORIAL_SKILLS + ("gzh-daily-pipeline",)
 
 
 class EditorialResourcesTest(unittest.TestCase):
@@ -38,9 +39,25 @@ class EditorialResourcesTest(unittest.TestCase):
     def test_bilingual_indexes_link_both_skills(self):
         for index in ("README.md", "README.en.md"):
             content = (ROOT / index).read_text(encoding="utf-8")
-            for name in SKILLS:
+            for name in EDITORIAL_SKILLS:
                 with self.subTest(index=index, skill=name):
                     self.assertIn(f"]({name}/SKILL.md)", content)
+
+    def test_bilingual_indexes_link_the_pipeline_skill(self):
+        for index in ("README.md", "README.en.md"):
+            content = (ROOT / index).read_text(encoding="utf-8")
+            with self.subTest(index=index):
+                self.assertIn("](gzh-daily-pipeline/SKILL.md)", content)
+
+    def test_pipeline_templates_match_the_scaffold(self):
+        """Every stage file the checker expects has a matching template."""
+        templates = {path.name for path in (ROOT / "gzh-daily-pipeline" / "templates").glob("*.md")}
+        script = (ROOT / "gzh-daily-pipeline" / "scripts" / "pipeline.py").read_text(encoding="utf-8")
+        for name in ("00_style.md", "01_选题卡.md", "02_案例决策卡.md", "03_证据与实测.md",
+                     "04_正文.md", "05_检查报告.md", "06_标题.md", "09_发布记录.md"):
+            with self.subTest(template=name):
+                self.assertIn(name, templates)
+                self.assertIn(name, script)
 
 
 if __name__ == "__main__":
