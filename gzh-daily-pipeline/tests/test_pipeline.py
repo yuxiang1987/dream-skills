@@ -103,7 +103,7 @@ class PipelineTest(unittest.TestCase):
         run_dir = self._fresh_run()
         path = run_dir / "01_选题卡.md"
         text = path.read_text(encoding="utf-8")
-        path.write_text(text.replace("source_skill: wechat-viral-topic\n", "", 1), encoding="utf-8")
+        path.write_text(text.replace("source_skill: gzh-topic-planning\n", "", 1), encoding="utf-8")
         result = run("check", "--dir", str(run_dir))
         self.assertEqual(result.returncode, 1)
         self.assertIn("缺少字段 source_skill", result.stdout)

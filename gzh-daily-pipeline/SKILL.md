@@ -23,11 +23,11 @@ description: 公众号内容生产的总调度入口，把选题、实测、写�
 | 阶段 | 做什么 | 调用 Skill | 交接产物 | 关口 |
 | --- | --- | --- | --- | --- |
 | S0 定盘 | 读账号宪法与知识库，确认赛道、受众、备胎选题 | 只读 | `00_style.md` | 自动 |
-| S1 选题 | 从热点或知识库找 3 个候选，打分选 1 个 | `wechat-viral-topic` | `01_选题卡.md` | 人工确认选题 |
+| S1 选题 | 从可核实线索比较至多3个候选，推荐1个小试任务 | `gzh-topic-planning` | `01_选题卡.md` | 人工同意进入实测 |
 | S2 案例与实测 | 案例决策卡 + 准备素材与提示词 | `wechat-article-writing` | `02_案例决策卡.md`、`03_证据与实测.md` | **硬关口**：作者亲测 |
 | S3 写作 | 按结构写正文 | `wechat-article-writing` | `04_正文.md` | 人工审稿 |
 | S4 定稿检查 | 四层 AI 味、病句、事实边界、阅读承诺 | `gzh-final-check` | `05_检查报告.md` | 人工确认：必须修改项清零 |
-| S5 标题封面排版 | 拟标题、生成封面、渲染富文本 | `wechat-viral-topic`、`gzh-webchat-cover`、`md-wechat-layout` | `06_标题.md`、`07_封面.png`、`08_排版/` | 人工选定标题 |
+| S5 标题封面排版 | 拟标题、生成封面、渲染富文本 | `wechat-article-writing`、`gzh-webchat-cover`、`md-wechat-layout` | `06_标题.md`、`07_封面.png`、`08_排版/` | 人工选定标题 |
 | S6 发布与回流 | 人工粘贴发布，成稿回流入库 | 人工 + 知识库入库 | `09_发布记录.md` + wiki 页 | 人工发布与入库 |
 
 阶段产物、字段和状态取值见 [references/handoff-contract.md](references/handoff-contract.md)；每阶段的自查清单见 [references/stage-checklists.md](references/stage-checklists.md)。
@@ -72,13 +72,13 @@ python scripts/pipeline.py init --root "E:\work\wechat-assistant\pipeline" --dat
 
 ### S1 选题
 
-调用 `wechat-viral-topic`。原料可以是热点、刚出的产品、作者的真实经历或知识库里积累的案例库。成稿要求：
+调用 `gzh-topic-planning`，先读账号定位、已发内容与历史反馈，再按适用来源搜集线索：异常表现文章、商业合作样本、官方产品变化、真实实操、读者问题、旧文延伸与时间节点。
 
-- 3 个候选，每个写清冲突点、受众、利益和传播锚点；
-- 8 维打分卡，总分低于 30 的不进入下一阶段；
-- 选中的 1 个写进 `01_选题卡.md`，状态改成 `已确认`。
+- 至多3个候选，写明来源与未知项、目标读者、具体任务、相对旧文新增价值及执行条件；不足不凑数。
+- 不设统一分数门槛；比较读者价值、时间价值、可展示性、成本与商业适配，明确推荐1个及其余暂缓理由。
+- 将推荐题、最小试跑、退出条件写进 `01_选题卡.md`；作者同意进入实测后才改成 `已确认`，不表示预期结论已证实。
 
-确认选题是人工关口。作者不认可就改 `01_选题卡.md`，不要在正文阶段再推翻选题。
+确认是人工关口。S2首轮试验若发现关键前提不成立，回到S1并退为待确认，缩小任务或换备选，保留变更理由；实测结果出来后再收敛正式文章承诺，不为锁题硬写。
 
 ### S2 案例与实测
 
@@ -102,7 +102,7 @@ python scripts/pipeline.py init --root "E:\work\wechat-assistant\pipeline" --dat
 
 ### S5 标题、封面、排版
 
-1. 用 `wechat-viral-topic` 的标题部分拟标题，至少 5 条不同公式，公众号不超过 28 字，写进 `06_标题.md`。作者选定一条后标 `已选定`。
+1. 用 `wechat-article-writing` 基于正文与实测拟标题，写进 `06_标题.md`；默认提供少量不同角度，不强制凑公式或统一字数。作者选定一条后标 `已选定`，标题不超出真实证据。
 2. 用 `gzh-webchat-cover` 按选定标题生成 `07_封面.png`（900×383）。封面承诺不能超过正文证据。
 3. 用 `md-wechat-layout` 渲染 `04_正文.md`，输出到 `08_排版/`，默认主题「晴蓝手记」。排版只翻译格式，不改字。
 
@@ -121,7 +121,7 @@ python scripts/pipeline.py init --root "E:\work\wechat-assistant\pipeline" --dat
 stage: S1 选题
 status: 已确认
 topic: 一句话主问题
-source_skill: wechat-viral-topic
+source_skill: gzh-topic-planning
 created: 2026-10-23
 updated: 2026-10-23
 ---
@@ -161,12 +161,12 @@ python scripts/pipeline.py status --dir "<当次目录>"
 交付前逐条确认：
 
 - [ ] `00_style.md` 已存在且本次选题在聚焦领域内
-- [ ] `01_选题卡.md` 有 3 个候选、8 维打分、1 个已确认选题
+- [ ] `01_选题卡.md` 有至多3个有依据候选、取舍理由、最小试跑与作者确认记录，不以评分代替判断
 - [ ] `02_案例决策卡.md` 写明读者问题、素材、验收方法和未满足条件
 - [ ] `03_证据与实测.md` 有作者实测记录；没有记录时正文只到骨架
 - [ ] `04_正文.md` 的提示词、截图、视频、耗时都能追溯到实测记录
 - [ ] `05_检查报告.md` 的必须修改项已清零
-- [ ] `06_标题.md` 已选定一条，公众号字数不超过 28
+- [ ] `06_标题.md` 已选定一条，标题与实测证据一致
 - [ ] `07_封面.png` 是 900×383，承诺不超过正文证据
 - [ ] `08_排版/` 有 `.preview.html`、`.wechat.html`、`.report.json`
 - [ ] `09_发布记录.md` 记了发布结果，或明确标为待发布

@@ -13,6 +13,7 @@ My personal collection of Codex skills. All custom skills live in a dedicated to
 | [gzh-final-check](gzh-final-check/SKILL.md) | Review language, test claims, media integrity, case explanations, and reader promises; inspect covers and previews when supplied; read-only by default |
 | [wechat-article-writing](wechat-article-writing/SKILL.md) | Plan and revise AI articles with sufficient evidence, traceable author judgments, natural Chinese sentences and paragraph progression, preserving genuine reactions and test or sponsorship limitations |
 | [gzh-daily-pipeline](gzh-daily-pipeline/SKILL.md) | Orchestrate topic, hands-on testing, writing, final review, titles, covers, layout, and publication feedback into one resumable pipeline |
+| [gzh-topic-planning](gzh-topic-planning/SKILL.md) | Research six traceable topic sources, compare up to three candidates against account history, and recommend a minimal hands-on trial without viral-score thresholds |
 
 ## WeChat daily pipeline
 
@@ -23,6 +24,7 @@ My personal collection of Codex skills. All custom skills live in a dedicated to
 - Handoffs use a file contract: every stage artifact carries fixed frontmatter, and the next stage reads the upstream file rather than conversation history.
 - A script validates the chain: missing files, illegal states, out-of-order stages, leftover placeholders, absent measurement records, and uncleared blocking review items.
 - Hard gate: the article cannot be marked complete without the author's own test record.
+- Topics use `gzh-topic-planning`: read positioning and history, obtain approval for a trial, and return to topic selection if its premise fails. Final titles use `wechat-article-writing`, not the removed viral-topic dependency.
 
 ```sh
 python gzh-daily-pipeline/scripts/pipeline.py init --root "<pipeline root>" --date 2026-10-23 --slug "<topic slug>"
