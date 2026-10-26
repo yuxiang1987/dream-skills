@@ -1,0 +1,4 @@
+interface:
+  display_name: "公众号对标拆解"
+  short_description: "拆解写法、案例与商业线索，沉淀有来源的方法"
+  default_prompt: "使用 $gzh-benchmark-deconstruct 分析指定公众号文章，依据原文拆解标题、钩子、结构、案例、证据与商业线索，提炼可迁移方法并更新知识库；不抄袭，不虚构实测、合作或传播因果。"

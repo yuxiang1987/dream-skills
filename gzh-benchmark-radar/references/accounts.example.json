@@ -1,0 +1,14 @@
+{
+  "note": "账号清单样例。username 必须是 gh_ 开头的原始 ID；directory 可省略，默认与 name 相同。只采白名单内的账号。",
+  "accounts": [
+    {"name": "路人甲TM", "username": "gh_d516081071ec", "directory": "lurenjiaTM"},
+    {"name": "摸鱼小李", "username": "gh_3923025946c5"},
+    {"name": "小林coding", "username": "gh_fc46cf2353fc"},
+    {"name": "卡尔的AI沃茨", "username": "gh_1421d5e48ca9"},
+    {"name": "苍何", "username": "gh_fdb597c42fa4"},
+    {"name": "沉默王二", "username": "gh_f0ee5948865f", "directory": "chenmowanger"},
+    {"name": "洛洛AI说", "username": "gh_426cd27710df"},
+    {"name": "郭震AI", "username": "gh_ce69fa698e90"},
+    {"name": "西羊石AI视频", "username": "gh_f5c1e588b297"}
+  ]
+}
