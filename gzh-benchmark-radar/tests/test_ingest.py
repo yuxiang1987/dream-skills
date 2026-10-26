@@ -135,6 +135,19 @@ account_username: "gh_test01"
         self.assertEqual(cases["示例实测文"]["angle"], "", "角度必须留空待填，脚本不代写结论")
         self.assertNotIn("示例文章甲", cases, "无实测信号的文章不应生成案例卡")
 
+    def test_daily_without_new_articles_still_writes_briefing(self):
+        fetch_summary = {"acquired_at": "2026-10-26T09:30:00+08:00", "accounts": [
+            {"account": "示例号", "username": "gh_test01", "fetched": 0, "added": 0,
+             "skipped_existing": 0, "failed": 0, "directory": "raw/article/示例号", "added_articles": []}]}
+        (self.batch / "fetch-summary.json").write_text(json.dumps(fetch_summary, ensure_ascii=False),
+                                                       encoding="utf-8")
+        result = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root), "daily",
+                                 "--accounts", str(self.accounts), "--date", "2026-10-26",
+                                 "--batch", str(self.batch)], capture_output=True, text=True, encoding="utf-8")
+        self.assertIn("未找到凭据", result.stdout + result.stderr, "无凭据时应明确报错而非静默")
+        briefing = self.batch / "雷达简报-2026-10-26.md"
+        self.assertFalse(briefing.exists(), "采集未成功时不应生成像样的简报")
+
     def test_cluster_requires_two_accounts(self):
         self.run_script("report", "--batch", str(self.batch), "--threshold", "1.5")
         report = json.loads((self.batch / "report.json").read_text(encoding="utf-8"))

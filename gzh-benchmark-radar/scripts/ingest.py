@@ -241,6 +241,7 @@ def cmd_fetch(args):
         folder = out_dir / directory / f"雷达-{args.date}"
         folder.mkdir(parents=True, exist_ok=True)
         added = skipped = failed = 0
+        new_rows = []
         for item in unique[:args.limit]:
             link = clean_url(item["url"])
             if link in known_links:
@@ -268,10 +269,14 @@ def cmd_fetch(args):
             with path.open("x", encoding="utf-8") as handle:
                 handle.write(text)
             known_links.add(link)
+            new_rows.append({"id": article_id(item), "title": title, "url": link,
+                             "published": content.get("create_time"),
+                             "raw_path": path.relative_to(args.root).as_posix()})
             added += 1
         summary.append({"account": name, "username": username, "fetched": len(unique[:args.limit]),
                         "added": added, "skipped_existing": skipped, "failed": failed,
-                        "directory": (folder.relative_to(args.root)).as_posix()})
+                        "directory": (folder.relative_to(args.root)).as_posix(),
+                        "added_articles": new_rows})
         print(f'{name}：新增 {added}，已存在跳过 {skipped}，失败 {failed}', flush=True)
     out = Path(args.batch) if args.batch else Path(args.root) / "output" / "ai-wechat-methodology" / f"雷达-{args.date}"
     out.mkdir(parents=True, exist_ok=True)
@@ -288,6 +293,13 @@ def cmd_stats(args):
         raise RuntimeError(f"批次清单不存在：{manifest_path}")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     rows = [(account["requested_name"], row) for account in manifest["accounts"] for row in account["articles"]]
+    if args.from_fetch:
+        fetched = json.loads(Path(args.from_fetch).read_text(encoding="utf-8"))
+        rows = [(item["account"], article) for item in fetched["accounts"]
+                for article in item.get("added_articles", [])]
+        if not rows:
+            print("本轮没有新增文章，跳过统计")
+            return 0
     key = load_key(args.root, args.key_file)
     if not key:
         raise RuntimeError("未找到凭据：配置 TIKHUB_API_KEY 或知识库 .local/tikhub.json")
@@ -432,6 +444,105 @@ def cmd_report(args):
     return 0
 
 
+BRIEFING = """---
+title: 对标雷达简报 {date}
+type: source
+tags: [公众号, 对标, 雷达]
+status: 草稿
+sources: []
+created: {date}
+updated: {date}
+---
+
+# 对标雷达简报 {date}
+
+## 本轮采集
+
+{collection}
+
+## 各号阅读基线（本轮统计）
+
+{baseline}
+
+## 异常样本（≥{threshold}× 本号中位数）
+
+{anomalies}
+
+## 跨账号同题事件簇
+
+{clusters}
+
+## 待填案例卡（带实测的文章）
+
+{cases}
+
+## 未入库原文
+
+{pending}
+
+## 口径与边界
+
+单次快照，阅读数会继续增长；含系统推荐，不是自然阅读；10 万以上封顶；中位数只在该号内部成立，跨号比绝对值无意义。高阅读只说明在它自己的号里突出，不说明某个标题或结构导致传播，也不能推出我们照写能到同样量级。案例卡只填了模型与信号，角度、步骤、验收点留空待人工补。
+"""
+
+
+def _bullet(items, empty="无"):
+    return "\n".join(f"- {item}" for item in items) if items else empty
+
+
+def cmd_daily(args):
+    """一条命令跑完：盘点多 → 采集新增 → 只统计新增 → 出简报。"""
+    date = args.date
+    batch = Path(args.batch) if args.batch else Path(args.root) / "output" / "ai-wechat-methodology" / f"雷达-{date}"
+    batch.mkdir(parents=True, exist_ok=True)
+    print("== 1/4 盘点本地状态 ==")
+    main(["--root", args.root, "plan", "--accounts", args.accounts, "--show", "3"])
+    print("== 2/4 采集新增 ==")
+    fetch_args = ["--root", args.root, "fetch", "--accounts", args.accounts,
+                  "--limit", str(args.limit), "--date", date, "--batch", str(batch)]
+    if args.dry_run:
+        fetch_args.append("--dry-run")
+    main(fetch_args)
+    summary_path = batch / "fetch-summary.json"
+    if not summary_path.is_file():
+        print("未生成采集清单，简报跳过")
+        return 0
+    collected = json.loads(summary_path.read_text(encoding="utf-8"))
+    added_total = sum(item["added"] for item in collected["accounts"])
+    if added_total and not args.dry_run:
+        print("== 3/4 统计新增文章的互动数据 ==")
+        main(["--root", args.root, "stats", "--batch", str(batch), "--date", date,
+              "--from-fetch", str(summary_path)])
+        print("== 4/4 汇总 ==")
+        if any(batch.glob("stats-*")):
+            main(["--root", args.root, "report", "--batch", str(batch)])
+        else:
+            print("没有统计产物，跳过汇总")
+    elif not added_total:
+        print("本轮无新增文章，仅生成空简报")
+    report = {}
+    report_path = batch / "report.json"
+    if report_path.is_file():
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    collection = _bullet([f'{item["account"]}：新增 {item["added"]}，已存在 {item["skipped_existing"]}，失败 {item["failed"]}'
+                          for item in collected["accounts"]])
+    baseline = _bullet([f'{item["account"]}：{item["n"]} 篇，中位数 {item["median"]}，区间 {item["min"]}—{item["max"]}'
+                        for item in report.get("baseline", [])])
+    anomalies = _bullet([f'{item["account"]}《{item["title"][:30]}》{item["read_num"]}（{item["ratio"]}×）'
+                         for item in report.get("anomalies", [])[:15]])
+    clusters = _bullet([f'{item["object"]}：{item["articles"]} 篇 / {len(item["accounts"])} 号 / {item["span_days"]} 天'
+                        for item in report.get("event_clusters", [])[:15]])
+    cases = _bullet([f'{item["article"][:30]}（模型：{"、".join(item["models"]) or "未识别"}）' for item in
+                     report.get("case_candidates", [])[:15]])
+    pending = _bullet([f"`{item}`" for item in report.get("raw_without_source", [])[:20]])
+    text = BRIEFING.format(date=date, collection=collection, baseline=baseline, anomalies=anomalies,
+                           clusters=clusters, cases=cases, pending=pending, threshold=args.threshold)
+    out = batch / f"雷达简报-{date}.md"
+    out.write_text(text, encoding="utf-8")
+    print(f"本轮新增 {added_total} 篇；简报：{out.as_posix()}")
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="对标雷达：采集、统计与事件簇")
     parser.add_argument("--root", required=True, help="知识库根目录")
@@ -455,6 +566,7 @@ def main(argv=None):
     stats.add_argument("--batch", required=True)
     stats.add_argument("--date", default=dt.date.today().isoformat())
     stats.add_argument("--workers", type=int, default=4)
+    stats.add_argument("--from-fetch", help="只统计某次 fetch 的新增文章")
     stats.set_defaults(func=cmd_stats)
 
     report = sub.add_parser("report", help="汇总异常样本、事件簇与未入库清单")
@@ -462,6 +574,15 @@ def main(argv=None):
     report.add_argument("--threshold", type=float, default=2.0)
     report.add_argument("--window", type=int, default=60)
     report.set_defaults(func=cmd_report)
+
+    daily = sub.add_parser("daily", help="一条命令跑完采集、统计与简报")
+    daily.add_argument("--accounts", required=True)
+    daily.add_argument("--limit", type=int, default=5, help="每号最多取几篇新文章，控制费用")
+    daily.add_argument("--date", default=dt.date.today().isoformat())
+    daily.add_argument("--batch")
+    daily.add_argument("--threshold", type=float, default=2.0)
+    daily.add_argument("--dry-run", action="store_true")
+    daily.set_defaults(func=cmd_daily)
 
     args = parser.parse_args(argv)
     return args.func(args)
