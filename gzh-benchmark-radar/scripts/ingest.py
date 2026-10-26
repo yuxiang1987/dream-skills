@@ -288,11 +288,14 @@ def cmd_fetch(args):
 
 def cmd_stats(args):
     batch = Path(args.batch)
-    manifest_path = batch / "manifest.json"
-    if not manifest_path.is_file():
-        raise RuntimeError(f"批次清单不存在：{manifest_path}")
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    rows = [(account["requested_name"], row) for account in manifest["accounts"] for row in account["articles"]]
+    rows = []
+    if not args.from_fetch:
+        manifest_path = batch / "manifest.json"
+        if not manifest_path.is_file():
+            raise RuntimeError(f"批次清单不存在：{manifest_path}")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        rows = [(account["requested_name"], row) for account in manifest["accounts"]
+                for row in account["articles"]]
     if args.from_fetch:
         fetched = json.loads(Path(args.from_fetch).read_text(encoding="utf-8"))
         rows = [(item["account"], article) for item in fetched["accounts"]
@@ -411,8 +414,16 @@ def cmd_report(args):
                           "span_days": span, "from": dates[0], "to": dates[-1]})
     multi.sort(key=lambda item: (-item["articles"], item["span_days"]))
     pending = [path for path in index_raw(args.root) if not refs.get(path)]
+    scope = None
+    fetch_summary = batch / "fetch-summary.json"
+    if fetch_summary.is_file():
+        fetched = json.loads(fetch_summary.read_text(encoding="utf-8"))
+        scope = {article["raw_path"] for item in fetched["accounts"] for article in item.get("added_articles", [])}
+        scope = scope or None
     cases = []
     for path in sorted(index_raw(args.root)):
+        if scope is not None and path not in scope:
+            continue
         try:
             text = (Path(args.root) / path).read_text(encoding="utf-8-sig", errors="replace")
         except OSError:
@@ -490,14 +501,50 @@ def _bullet(items, empty="无"):
     return "\n".join(f"- {item}" for item in items) if items else empty
 
 
+def write_briefing(root, batch, date, threshold):
+    """用批次产物写 Markdown 简报；缺数据时写空表而不是编造。"""
+    batch = Path(batch)
+    report = {}
+    report_path = batch / "report.json"
+    if report_path.is_file():
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    collected = {"accounts": []}
+    summary_path = batch / "fetch-summary.json"
+    if summary_path.is_file():
+        collected = json.loads(summary_path.read_text(encoding="utf-8"))
+    collection = _bullet([f'{item["account"]}：新增 {item["added"]}，已存在 {item["skipped_existing"]}，失败 {item["failed"]}'
+                          for item in collected.get("accounts", [])])
+    baseline = _bullet([f'{item["account"]}：{item["n"]} 篇，中位数 {item["median"]}，区间 {item["min"]}—{item["max"]}'
+                        + ("（样本不足，不作判断）" if item["n"] < 3 else "")
+                        for item in report.get("baseline", [])])
+    anomalies = _bullet([f'{item["account"]}《{item["title"][:30]}》{item["read_num"]}（{item["ratio"]}×）'
+                         for item in report.get("anomalies", [])[:15]])
+    clusters = _bullet([f'{item["object"]}：{item["articles"]} 篇 / {len(item["accounts"])} 号 / {item["span_days"]} 天'
+                        for item in report.get("event_clusters", [])[:15]])
+    cases = _bullet([f'{item["article"][:30]}（模型：{"、".join(item["models"]) or "未识别"}）'
+                     for item in report.get("case_candidates", [])[:15]])
+    pending = _bullet([f"`{item}`" for item in report.get("raw_without_source", [])[:20]])
+    text = BRIEFING.format(date=date, collection=collection, baseline=baseline, anomalies=anomalies,
+                           clusters=clusters, cases=cases, pending=pending, threshold=threshold)
+    out = batch / f"雷达简报-{date}.md"
+    out.write_text(text, encoding="utf-8")
+    return out
+
+
+def cmd_brief(args):
+    out = write_briefing(args.root, args.batch, args.date, args.threshold)
+    print(f"简报：{out.as_posix()}")
+    return 0
+
+
 def cmd_daily(args):
-    """一条命令跑完：盘点多 → 采集新增 → 只统计新增 → 出简报。"""
+    """一条命令跑完：盘点 → 采集新增 → 只统计新增 → 汇总 → 简报。"""
     date = args.date
     batch = Path(args.batch) if args.batch else Path(args.root) / "output" / "ai-wechat-methodology" / f"雷达-{date}"
     batch.mkdir(parents=True, exist_ok=True)
-    print("== 1/4 盘点本地状态 ==")
+    print("== 1/5 盘点本地状态 ==")
     main(["--root", args.root, "plan", "--accounts", args.accounts, "--show", "3"])
-    print("== 2/4 采集新增 ==")
+    print("== 2/5 采集新增 ==")
     fetch_args = ["--root", args.root, "fetch", "--accounts", args.accounts,
                   "--limit", str(args.limit), "--date", date, "--batch", str(batch)]
     if args.dry_run:
@@ -510,35 +557,18 @@ def cmd_daily(args):
     collected = json.loads(summary_path.read_text(encoding="utf-8"))
     added_total = sum(item["added"] for item in collected["accounts"])
     if added_total and not args.dry_run:
-        print("== 3/4 统计新增文章的互动数据 ==")
+        print("== 3/5 统计新增文章的互动数据 ==")
         main(["--root", args.root, "stats", "--batch", str(batch), "--date", date,
               "--from-fetch", str(summary_path)])
-        print("== 4/4 汇总 ==")
+        print("== 4/5 汇总 ==")
         if any(batch.glob("stats-*")):
             main(["--root", args.root, "report", "--batch", str(batch)])
         else:
             print("没有统计产物，跳过汇总")
-    elif not added_total:
-        print("本轮无新增文章，仅生成空简报")
-    report = {}
-    report_path = batch / "report.json"
-    if report_path.is_file():
-        report = json.loads(report_path.read_text(encoding="utf-8"))
-    collection = _bullet([f'{item["account"]}：新增 {item["added"]}，已存在 {item["skipped_existing"]}，失败 {item["failed"]}'
-                          for item in collected["accounts"]])
-    baseline = _bullet([f'{item["account"]}：{item["n"]} 篇，中位数 {item["median"]}，区间 {item["min"]}—{item["max"]}'
-                        for item in report.get("baseline", [])])
-    anomalies = _bullet([f'{item["account"]}《{item["title"][:30]}》{item["read_num"]}（{item["ratio"]}×）'
-                         for item in report.get("anomalies", [])[:15]])
-    clusters = _bullet([f'{item["object"]}：{item["articles"]} 篇 / {len(item["accounts"])} 号 / {item["span_days"]} 天'
-                        for item in report.get("event_clusters", [])[:15]])
-    cases = _bullet([f'{item["article"][:30]}（模型：{"、".join(item["models"]) or "未识别"}）' for item in
-                     report.get("case_candidates", [])[:15]])
-    pending = _bullet([f"`{item}`" for item in report.get("raw_without_source", [])[:20]])
-    text = BRIEFING.format(date=date, collection=collection, baseline=baseline, anomalies=anomalies,
-                           clusters=clusters, cases=cases, pending=pending, threshold=args.threshold)
-    out = batch / f"雷达简报-{date}.md"
-    out.write_text(text, encoding="utf-8")
+    else:
+        print("本轮无新增文章，跳过统计与汇总")
+    print("== 5/5 简报 ==")
+    out = write_briefing(args.root, batch, date, args.threshold)
     print(f"本轮新增 {added_total} 篇；简报：{out.as_posix()}")
     return 0
 
@@ -574,6 +604,12 @@ def main(argv=None):
     report.add_argument("--threshold", type=float, default=2.0)
     report.add_argument("--window", type=int, default=60)
     report.set_defaults(func=cmd_report)
+
+    brief = sub.add_parser("brief", help="用已有批次产物写简报")
+    brief.add_argument("--batch", required=True)
+    brief.add_argument("--date", default=dt.date.today().isoformat())
+    brief.add_argument("--threshold", type=float, default=2.0)
+    brief.set_defaults(func=cmd_brief)
 
     daily = sub.add_parser("daily", help="一条命令跑完采集、统计与简报")
     daily.add_argument("--accounts", required=True)
