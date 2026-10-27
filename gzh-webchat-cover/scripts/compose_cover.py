@@ -43,7 +43,7 @@ def wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, max
             current = trial
     if current:
         lines.append(current)
-    return lines[:2]
+    return lines
 
 
 def main() -> None:
@@ -74,6 +74,8 @@ def main() -> None:
     title_font = ImageFont.truetype(args.font or find_font(True), 48)
     sub_font = ImageFont.truetype(args.subtitle_font or find_font(False), 20)
     lines = wrap(draw, args.title, title_font, 405)
+    if len(lines) > 2:
+        p.error("主标题超过两行，无法完整排版；请缩短标题后重试。")
     line_h = 62
     total_h = len(lines) * line_h + (34 if args.subtitle else 0)
     y = max(44, (SIZE[1] - total_h) // 2)

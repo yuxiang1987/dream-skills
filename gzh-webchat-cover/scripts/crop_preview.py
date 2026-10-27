@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-"""Generate the other crops WeChat may show, so one cover stays legible everywhere.
+"""Generate hypothetical center-crop previews, not WeChat platform previews.
 
-WeChat exposes each article's cover at several ratios (235_1 / 16_9 / 3_4 / 1_1).
-The feed card and share card do not always use the 2.35:1 banner, so a cover that
-only works as a wide banner can lose its subject or its text elsewhere.
+API variants may be independently composed; actual display cropping is unverified.
 
 Usage:
     python scripts/crop_preview.py --cover 07_封面.png --outdir 07_裁剪预览
@@ -67,7 +65,7 @@ def main() -> int:
         print("检查：主体在右侧时，1:1 裁剪可能切掉主体边缘；确认关键物体没有被裁断。")
     else:
         print("检查：主体居中时，宽幅两侧多为留白；确认 16:9 与 3:4 不显得空。")
-    print("三张预览都要在手机缩略图大小下看一眼，再决定是否调整主文案位置。")
+    print("这些只是居中裁剪假设；按目标位置的实际展示方式核对。")
     return 0
 
 
