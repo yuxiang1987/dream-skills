@@ -1,4 +1,0 @@
-interface:
-  display_name: "公众号日更流水线"
-  short_description: "调度选题、实测、写作、定稿检查、标题、封面、排版和回流，逐段交接并校验"
-  default_prompt: "使用 $gzh-daily-pipeline 跑今天的公众号流水线，从上次断点继续，每到人工关口停下来给我确认。"

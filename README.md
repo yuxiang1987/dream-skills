@@ -12,31 +12,7 @@
 | [md-wechat-layout](md-wechat-layout/SKILL.md) | 将 Markdown 文章排版成公众号富文本，默认晴蓝手记大号编号与浅蓝高亮 |
 | [gzh-final-check](gzh-final-check/SKILL.md) | 公众号最终定稿检查，校对语言、四层 AI 味、实测与媒体引用，核对案例解释和阅读承诺；有材料时检查封面与预览，默认只检查 |
 | [wechat-article-writing](wechat-article-writing/SKILL.md) | 程序员拾梦公众号案例策划、正文写作和定向改稿，检查材料与判断来路，优化中文句序和段落推进，保留真实感受、实测与商单边界 |
-| [gzh-daily-pipeline](gzh-daily-pipeline/SKILL.md) | 公众号生产总调度，把选题、实测、写作、定稿检查、标题、封面、排版和发布回流传成一条可断点续跑的流水线 |
 | [gzh-topic-planning](gzh-topic-planning/SKILL.md) | 从六类可追溯来源为AI实测公众号选题，结合账号历史比较至多3个候选，推荐最小实测任务；不设爆款分数门槛 |
-
-## 公众号日更流水线
-
-`gzh-daily-pipeline` 是其他公众号技能的上层调度：它不重复实现各环节能力，只决定现在跑哪一步、把上一步产物接给下一步、在每道关口检查交付物是否合格。
-
-- 七个阶段：定盘 → 选题 → 案例与实测 → 写作 → 定稿检查 → 标题封面排版 → 发布与回流。
-- 四个工关口：确认选题、作者亲测、检查结论清零、人工发布。
-- 交接靠文件契约：每阶段产物有固定 frontmatter，下游只读上游文件，不读对话历史。
-- 验收靠脚本：`scripts/pipeline.py` 检查缺文件、状态非法、顺序倒置、占位符残留、实测缺失和未清零的必须修改项。
-- 硬关口：没有作者实测记录，正文不能标记完成。
-- 选题由 `gzh-topic-planning` 接手，先读定位与历史；作者同意小试后进入实测，前提失败退回选题。正式标题由 `wechat-article-writing` 接手，不依赖旧爆款选题技能。
-
-```sh
-python gzh-daily-pipeline/scripts/pipeline.py init --root "E:\work\wechat-assistant\pipeline" --date 2026-10-23 --slug "选题短名"
-python gzh-daily-pipeline/scripts/pipeline.py check --dir "<当次目录>"
-python gzh-daily-pipeline/scripts/pipeline.py status --dir "<当次目录>"
-```
-
-### 测试
-
-```sh
-python -m unittest discover -s gzh-daily-pipeline/tests -p "test_pipeline.py"
-```
 
 ## 公众号封面
 
