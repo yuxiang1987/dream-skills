@@ -21,7 +21,7 @@ test('晴蓝手记恢复自适应图片，用对称固定内边距，保留原�
   const filename = path.join(path.dirname(input), '图.png');
   fs.writeFileSync(filename, bytes);
   const html = convert(input, { theme: '晴蓝手记' }).html;
-  assert.match(html, /<p[^>]*margin:1.2em 0;width:100%;padding:0 32px;box-sizing:border-box;[^>]*><img/);
+  assert.match(html, /<p[^>]*margin:1.9em 0;width:100%;padding:0 32px;box-sizing:border-box;[^>]*><img/);
   assert.match(html, /<img[^>]*style="[^"]*width:auto;height:auto;max-width:100%;margin:0 auto/);
   assert.match(html, /border-radius:6px/);
   assert.match(html, /box-shadow:/);
@@ -34,7 +34,7 @@ test('晴蓝手记恢复自适应图片，用对称固定内边距，保留原�
   assert.equal((gallery.match(/width:100%;padding:0 32px;box-sizing:border-box/g) || []).length, 2);
   fs.writeFileSync(input, '图片前\n![[图.png]]\n图片后');
   const mixed = convert(input, { theme: '晴蓝手记' }).html;
-  assert.match(mixed, /<span[^>]*margin:1.2em 0;width:100%;padding:0 32px;box-sizing:border-box;[^>]*><img/);
+  assert.match(mixed, /<span[^>]*margin:1.9em 0;width:100%;padding:0 32px;box-sizing:border-box;[^>]*><img/);
   assert.match(mixed, /图片前/);
   assert.match(mixed, /图片后/);
   assert.equal((mixed.match(/width:100%;padding:0 32px;box-sizing:border-box/g) || []).length, 1);

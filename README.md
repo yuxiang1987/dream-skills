@@ -9,7 +9,7 @@
 | 技能 | 用途 |
 | --- | --- |
 | [gzh-webchat-cover](gzh-webchat-cover/SKILL.md) | 将公众号长标题转译成电影场景、品牌科技图或编辑图解风格的横版封面 |
-| [md-wechat-layout](md-wechat-layout/SKILL.md) | 将 Markdown 文章排版成公众号富文本，默认晴蓝手记大号编号与浅蓝高亮 |
+| [md-wechat-layout](md-wechat-layout/SKILL.md) | 将 Markdown 文章排版成公众号富文本，默认晴蓝手记；统一留白、不缩进、中文引号与中英数字间距，检查手机段落 |
 | [gzh-final-check](gzh-final-check/SKILL.md) | 公众号最终定稿检查，校对语言、四层 AI 味、实测与媒体引用，核对案例解释和阅读承诺；有材料时检查封面与预览，默认只检查 |
 | [wechat-article-writing](wechat-article-writing/SKILL.md) | 程序员拾梦公众号案例策划、正文写作和定向改稿，检查材料与判断来路，优化中文句序和段落推进，保留真实感受、实测与商单边界 |
 | [gzh-topic-planning](gzh-topic-planning/SKILL.md) | 从六类可追溯来源为AI实测公众号选题，结合账号历史比较至多3个候选，推荐最小实测任务；不设爆款分数门槛 |

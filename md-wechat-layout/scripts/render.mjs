@@ -106,6 +106,10 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 16, l
       for (const key of ['th', 'td']) custom[key] += 'font-size:14px;line-height:26px;overflow-wrap:break-word;';
     }
     if (selected.id === 'mint-soda') for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] += 'text-align:left;';
+    const paragraphGap = Number((fontSize * (selected.id === 'blue-journal' ? 1.6 : 1.9)).toFixed(2));
+    for (const key of ['p', 'liP', 'bqP']) custom[key] += `text-indent:0;margin-bottom:${paragraphGap}px;`;
+    for (const key of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) custom[key] = `${custom[key] || base[key]}margin-bottom:${paragraphGap}px;`;
+    custom.gallery = `${base.gallery}margin-top:${paragraphGap}px;margin-bottom:${paragraphGap}px;`;
     for (const key of ['strong', 'em', 's', 'mark', 'a', 'code']) {
       custom[key] = `${withoutTextMetrics(custom[key])}font-family:inherit;font-size:inherit;line-height:inherit;vertical-align:baseline;`;
     }
@@ -126,7 +130,7 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 16, l
       for (const key of ['pre', 'preHeader', 'preLabel']) custom[key] = base[key];
     }
     const renderTheme = { ...selected, codeTheme: 'light', codeChrome: 'mac' };
-    let html = stripPreviewMeta(renderMarkdown(source, renderTheme, { fontSize, linkFootnotes, galleryMode: 'stack', macCode: true, plainInlineText: true, custom }));
+    let html = stripPreviewMeta(renderMarkdown(source, renderTheme, { fontSize, linkFootnotes, galleryMode: 'stack', macCode: true, plainInlineText: true, readingTypography: true, custom }));
     // Keep Markdown emphasis inline. A fully bold paragraph is still ordinary
     // body copy; only an explicit Markdown blockquote should become a card.
     if (/\$\$|\$[^\n$]+\$/.test(source)) warnings.push('数学公式未转换为图片，请检查预览。');

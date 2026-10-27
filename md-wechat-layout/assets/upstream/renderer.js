@@ -612,6 +612,46 @@ function createMd(theme, opts) {
     }
   })
 
+  // Format visible text after parsing so Markdown syntax, code and URLs stay intact.
+  if (opts.readingTypography) md.core.ruler.push('reading_typography', (state) => {
+    const format = text => text.replace(/“/g, '「').replace(/”/g, '」')
+      .replace(/(\p{Script=Han})([A-Za-z0-9])/gu, '$1 $2')
+      .replace(/([A-Za-z0-9])(\p{Script=Han})/gu, '$1 $2')
+    const needsSpace = (left, right) => /\p{Script=Han}[A-Za-z0-9]|[A-Za-z0-9]\p{Script=Han}/u.test(left.slice(-1) + right.slice(0, 1))
+    for (let i = 0; i < state.tokens.length; i++) {
+      const block = state.tokens[i]
+      if (block.type !== 'inline' || !block.children) continue
+      const children = []
+      let previous = null
+      let first = state.tokens[i - 1]?.type === 'paragraph_open'
+      let autoLink = false
+      for (const child of block.children) {
+        if (child.type === 'link_open') autoLink = child.markup === 'linkify' || child.markup === 'autolink'
+        if (child.type === 'link_close') autoLink = false
+        if (child.type === 'text' || child.type === 'code_inline') {
+          if (child.type === 'text' && !autoLink) {
+            child.content = format(child.content)
+            if (first) child.content = child.content.replace(/^[\u3000\u00a0]+/u, '')
+          }
+          if (child.content) {
+            if (previous && needsSpace(previous.content, child.content)) {
+              const space = new state.Token('text', '', 0)
+              space.content = ' '
+              children.push(space)
+            }
+            previous = child
+            first = false
+          }
+        } else if (child.nesting === 0) {
+          previous = null
+          first = false
+        }
+        children.push(child)
+      }
+      block.children = children
+    }
+  })
+
   const galleryContainer = (token, count) => {
     let layout = 'display:block;'
     if (galleryMode === 'grid') layout = 'display:flex;flex-wrap:wrap;justify-content:space-between;'
@@ -799,7 +839,7 @@ function createMd(theme, opts) {
     if (theme.imageSideSpacingPx && imageOnly) {
       for (const child of children) if (child.type === 'image') child.attrSet('data-image-inset', 'outer')
       const paragraph = context === 'list' ? styles.liP : context === 'blockquote' ? styles.bqP : styles.p
-      return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(`${paragraph}margin:1.2em 0;width:100%;padding:0 ${theme.imageSideSpacingPx}px;box-sizing:border-box;`)}">`
+      return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(`${paragraph}margin:${opts.readingTypography ? '1.9em' : '1.2em'} 0;width:100%;padding:0 ${theme.imageSideSpacingPx}px;box-sizing:border-box;`)}">`
     }
     if (context === 'list') return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(styles.liP)}">`
     if (context === 'blockquote') return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(styles.bqP)}">`
@@ -931,8 +971,11 @@ function createMd(theme, opts) {
       return `${parts.open}<img src="${src}" alt="${esc(alt)}"${titleAttr} decoding="async" style="${escapeHtmlAttr(`${styles.galleryImg}${parts.image}${grStyle}`)}"/>${parts.close}`
     }
     const image = `<img${dl(token)} src="${src}" alt="${esc(alt)}"${titleAttr} decoding="async" style="${escapeHtmlAttr(styles.img)}"/>`
-    const imgTag = theme.imageSideSpacingPx && token.attrGet('data-image-inset') !== 'outer'
-      ? `<span style="display:block;margin:1.2em 0;width:100%;padding:0 ${theme.imageSideSpacingPx}px;box-sizing:border-box;">${image}</span>`
+    const inset = theme.imageSideSpacingPx ? `width:100%;padding:0 ${theme.imageSideSpacingPx}px;box-sizing:border-box;` : ''
+    const imgTag = opts.readingTypography && token.attrGet('data-image-inset') !== 'outer'
+      ? `<span style="display:block;margin:1.9em 0;${inset}">${image}</span>`
+      : theme.imageSideSpacingPx && token.attrGet('data-image-inset') !== 'outer'
+      ? `<span style="display:block;margin:1.2em 0;${inset}">${image}</span>`
       : image
     if (!alt.trim() || /\.(?:png|jpe?g|gif|webp)$/i.test(alt.trim())) return imgTag
     return `${imgTag}<span style="${escapeHtmlAttr(styles.caption)}">${esc(alt)}</span>`
@@ -986,6 +1029,7 @@ export function renderMarkdown(src, theme, opts = {}) {
     opts.fontFamily || '',
     opts.macCode ? 1 : 0,
     opts.plainInlineText ? 1 : 0,
+    opts.readingTypography ? 1 : 0,
     normalizeGalleryMode(opts.galleryMode),
     normalizeGalleryRatio(opts.galleryRatio),
     opts.linkFootnotes ? 1 : 0,
