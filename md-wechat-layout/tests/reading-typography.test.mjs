@@ -81,7 +81,7 @@ test('独立图、单列图库和混排图上下留白，图片地址与尺寸�
     assert.match(html, /<section[^>]*margin-top:[\d.]+px;margin-bottom:[\d.]+px;/);
     fs.writeFileSync(input, `![](${url})`);
     html = convert(input, { theme }).html;
-    assert.match(html, /margin:(?:1.9em 0|0 [^;]+;[^>]*margin-bottom:[\d.]+px;)/);
+    assert.match(html, /margin:(?:1.9em 0|[\d.]+px 0|0 [^;]+;[^>]*margin-bottom:[\d.]+px;)/);
     fs.writeFileSync(input, `图片前AI\n![](${url})\n图片后3天`);
   }
 });

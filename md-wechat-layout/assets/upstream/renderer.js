@@ -648,6 +648,24 @@ function createMd(theme, opts) {
         }
         children.push(child)
       }
+      if (opts.avoidOrphans && state.tokens[i - 1]?.type === 'paragraph_open'
+          && state.tokens[i - 1]?.meta?.blockContext === 'normal'
+          && !children.some(t => ['image', 'code_inline', 'link_open', 'link_close'].includes(t.type))) {
+        const last = children.findLastIndex(t => t.type === 'text' && t.content.trim())
+        const match = last >= 0 && children[last].content.match(/([\p{Script=Han}]{4,6}[。！？])([ \t\r\n]*)$/u)
+        if (match) {
+          const text = children[last].content
+          const prefix = new state.Token('text', '', 0)
+          prefix.content = text.slice(0, match.index)
+          const open = new state.Token('html_inline', '', 0)
+          open.content = '<span data-reading-tail="" style="white-space:nowrap;font-family:inherit;font-size:inherit;line-height:inherit;vertical-align:baseline;word-break:normal;overflow-wrap:normal;">'
+          const tail = new state.Token('text', '', 0)
+          tail.content = text.slice(match.index)
+          const close = new state.Token('html_inline', '', 0)
+          close.content = '</span>'
+          children.splice(last, 1, prefix, open, tail, close)
+        }
+      }
       block.children = children
     }
   })
@@ -664,7 +682,7 @@ function createMd(theme, opts) {
   // 公众号编辑器不执行固定高度裁剪，这样预览与粘贴后的效果保持一致。
   const galleryItemParts = (count, i, gw) => {
     if (galleryMode === 'stack') {
-      const inset = theme.imageSideSpacingPx ? `width:100%;padding:0 ${theme.imageSideSpacingPx}px;box-sizing:border-box;` : ''
+      const inset = theme.imageSideSpacingPx ? `width:100%;padding:0 ${theme.imageSideSpacingPx}px;box-sizing:border-box;text-align:center;line-height:0;letter-spacing:0;` : ''
       return {
         open: `<section style="margin:0 0 ${i === count - 1 ? '0' : '8px'};${inset}">`,
         close: '</section>',
@@ -838,8 +856,9 @@ function createMd(theme, opts) {
       t.type === 'image' || t.type === 'softbreak' || t.type === 'hardbreak' || (t.type === 'text' && !t.content.trim()))
     if (theme.imageSideSpacingPx && imageOnly) {
       for (const child of children) if (child.type === 'image') child.attrSet('data-image-inset', 'outer')
-      const paragraph = context === 'list' ? styles.liP : context === 'blockquote' ? styles.bqP : styles.p
-      return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(`${paragraph}margin:${opts.readingTypography ? '1.9em' : '1.2em'} 0;width:100%;padding:0 ${theme.imageSideSpacingPx}px;box-sizing:border-box;`)}">`
+      tokens[idx + 2].meta = { ...(tokens[idx + 2].meta || {}), imageOnlyContainer: true }
+      const gap = Number(((opts.fontSize || 16) * (opts.readingTypography ? 1.9 : 1.2)).toFixed(2))
+      return `<section${dl(tokens[idx])} style="margin:${gap}px 0;width:100%;padding:0 ${theme.imageSideSpacingPx}px;box-sizing:border-box;text-align:center;text-indent:0;font-size:0;line-height:0;letter-spacing:0;">`
     }
     if (context === 'list') return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(styles.liP)}">`
     if (context === 'blockquote') return `<p${dl(tokens[idx])} style="${escapeHtmlAttr(styles.bqP)}">`
@@ -857,6 +876,7 @@ function createMd(theme, opts) {
       const i = Number(pos)
       return `${galleryItemParts(count, i).close}${i === count - 1 ? '</section>' : ''}`
     }
+    if (tokens[idx].meta?.imageOnlyContainer) return '</section>\n'
     return `</p>\n`
   }
 
@@ -971,7 +991,7 @@ function createMd(theme, opts) {
       return `${parts.open}<img src="${src}" alt="${esc(alt)}"${titleAttr} decoding="async" style="${escapeHtmlAttr(`${styles.galleryImg}${parts.image}${grStyle}`)}"/>${parts.close}`
     }
     const image = `<img${dl(token)} src="${src}" alt="${esc(alt)}"${titleAttr} decoding="async" style="${escapeHtmlAttr(styles.img)}"/>`
-    const inset = theme.imageSideSpacingPx ? `width:100%;padding:0 ${theme.imageSideSpacingPx}px;box-sizing:border-box;` : ''
+    const inset = theme.imageSideSpacingPx ? `width:100%;padding:0 ${theme.imageSideSpacingPx}px;box-sizing:border-box;text-align:center;line-height:0;letter-spacing:0;` : ''
     const imgTag = opts.readingTypography && token.attrGet('data-image-inset') !== 'outer'
       ? `<span style="display:block;margin:1.9em 0;${inset}">${image}</span>`
       : theme.imageSideSpacingPx && token.attrGet('data-image-inset') !== 'outer'
@@ -1030,6 +1050,7 @@ export function renderMarkdown(src, theme, opts = {}) {
     opts.macCode ? 1 : 0,
     opts.plainInlineText ? 1 : 0,
     opts.readingTypography ? 1 : 0,
+    opts.avoidOrphans ? 1 : 0,
     normalizeGalleryMode(opts.galleryMode),
     normalizeGalleryRatio(opts.galleryRatio),
     opts.linkFootnotes ? 1 : 0,

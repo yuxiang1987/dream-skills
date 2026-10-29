@@ -21,8 +21,10 @@ test('晴蓝手记恢复自适应图片，用对称固定内边距，保留原�
   const filename = path.join(path.dirname(input), '图.png');
   fs.writeFileSync(filename, bytes);
   const html = convert(input, { theme: '晴蓝手记' }).html;
-  assert.match(html, /<p[^>]*margin:1.9em 0;width:100%;padding:0 32px;box-sizing:border-box;[^>]*><img/);
+  assert.match(html, /<section[^>]*margin:30.4px 0;width:100%;padding:0 32px;box-sizing:border-box;text-align:center;[^>]*><img/);
   assert.match(html, /<img[^>]*style="[^"]*width:auto;height:auto;max-width:100%;margin:0 auto/);
+  assert.match(html, /<img[^>]*display:inline-block;vertical-align:middle/);
+  assert.doesNotMatch(html, /<p[^>]*text-align:left[^>]*><img/);
   assert.match(html, /border-radius:6px/);
   assert.match(html, /box-shadow:/);
   assert.ok(html.includes(bytes.toString('base64')));

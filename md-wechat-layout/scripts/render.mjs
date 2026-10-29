@@ -40,11 +40,12 @@ export function normalizeObsidian(source, warnings = []) {
   return source.replace(/\u0000CODE(\d+)\u0000/g, (_, i) => protectedParts[Number(i)]);
 }
 
-export function convert(input, { theme = 'blue-journal', vault, fontSize = 16, linkFootnotes = false } = {}) {
+export function convert(input, { theme = 'blue-journal', vault, fontSize = 16, linkFootnotes = false, codeMaxHeight = 320, avoidOrphans = false } = {}) {
   const mistBlue = (aliases[theme] || theme) === 'mist-blue';
   const selected = [...themes, blueJournal].find(t => t.id === (mistBlue ? 'mint-soda' : (aliases[theme] || theme)));
   if (!selected || !['cyan-scape', 'mint-soda', 'blue-journal'].includes(selected.id)) throw new Error(`不支持的主题：${theme}`);
   if (!Number.isFinite(fontSize) || fontSize < 12 || fontSize > 24) throw new Error('字号须为 12–24');
+  if (!Number.isFinite(codeMaxHeight) || codeMaxHeight < 0) throw new Error('代码窗口高度须为非负数，0表示完整展开');
   const warnings = [];
   const source = normalizeObsidian(fs.readFileSync(input, 'utf8'), warnings);
   const root = vault ? path.resolve(vault) : null;
@@ -129,8 +130,9 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 16, l
     if (selected.id === 'blue-journal') {
       for (const key of ['pre', 'preHeader', 'preLabel']) custom[key] = base[key];
     }
+    if (codeMaxHeight > 0) custom.preBody += `max-height:${codeMaxHeight}px;overflow:auto;box-sizing:border-box;-webkit-overflow-scrolling:touch;`;
     const renderTheme = { ...selected, codeTheme: 'light', codeChrome: 'mac' };
-    let html = stripPreviewMeta(renderMarkdown(source, renderTheme, { fontSize, linkFootnotes, galleryMode: 'stack', macCode: true, plainInlineText: true, readingTypography: true, custom }));
+    let html = stripPreviewMeta(renderMarkdown(source, renderTheme, { fontSize, linkFootnotes, galleryMode: 'stack', macCode: true, plainInlineText: true, readingTypography: true, avoidOrphans, custom }));
     // Keep Markdown emphasis inline. A fully bold paragraph is still ordinary
     // body copy; only an explicit Markdown blockquote should become a card.
     if (/\$\$|\$[^\n$]+\$/.test(source)) warnings.push('数学公式未转换为图片，请检查预览。');
@@ -156,17 +158,16 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 16, l
 export function preview(html, title, warnings) {
   return `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)}</title>
 <style>body{margin:0;background:#f3f5f4;font-family:system-ui}header{position:sticky;top:0;background:white;padding:16px;z-index:1;border-bottom:1px solid #ddd}button{padding:10px 18px;cursor:pointer}article{max-width:677px;margin:24px auto;background:white;padding:24px}aside{max-width:720px;margin:auto;color:#765b16;font-size:14px}</style>
-<style>article section[style*="padding:14px 16px"]{max-height:450px;overflow-y:auto!important}body.copying article section[style*="padding:14px 16px"]{max-height:none;overflow-y:visible!important}</style>
-<header><button id="copy">复制公众号排版</button> <span id="status">长代码窗口预览限高 450px，可滚动；复制时保留全部内容</span></header>
-<aside>${warnings.map(w => `<p>${escape(w)}</p>`).join('')}</aside><article id="content">${html}</article>
+<style>article section[style*="max-height:"][style*="overflow:auto"]{scrollbar-gutter:stable;scrollbar-color:#8bb7d7 #edf5fa}article section[style*="max-height:"][style*="overflow:auto"]::-webkit-scrollbar{width:8px}article section[style*="max-height:"][style*="overflow:auto"]::-webkit-scrollbar-track{background:#edf5fa}article section[style*="max-height:"][style*="overflow:auto"]::-webkit-scrollbar-thumb{background:#8bb7d7;border-radius:4px}</style>
+<header><button id="copy">复制完整公众号排版</button> <span id="status">复制保留全文与内联样式；图片、滚动效果需在微信粘贴后确认</span></header>
+<aside><details><summary>排版提示（${warnings.length}项）</summary>${warnings.map(w => `<p>${escape(w)}</p>`).join('')}</details></aside><article id="content">${html}</article>
 <script>
 document.getElementById('copy').onclick=async()=>{
 const content=document.getElementById('content'),status=document.getElementById('status');
 let ok=false;
 try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([content.innerHTML],{type:'text/html'}),'text/plain':new Blob([content.innerText],{type:'text/plain'})})]);ok=true}catch{
-document.body.classList.add('copying');
 const selection=getSelection(),range=document.createRange();range.selectNodeContents(content);selection.removeAllRanges();selection.addRange(range);
-try{ok=document.execCommand('copy')}catch{}selection.removeAllRanges();document.body.classList.remove('copying');}
+try{ok=document.execCommand('copy')}catch{}selection.removeAllRanges();}
 status.textContent=ok?'已复制富文本，去公众号正文粘贴':'复制失败：请选中下方文章并按 Ctrl+C';};
 </script></html>`;
 }
@@ -175,18 +176,20 @@ function main() {
   const args = process.argv.slice(2);
   const input = args.shift();
   if (!input || input === '--help') {
-    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 16] [--link-footnotes]'); return;
+    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 16] [--code-max-height 320] [--avoid-orphans] [--link-footnotes]'); return;
   }
   const options = {};
   let out = path.join(path.dirname(path.resolve(input)), 'wechat-output');
   while (args.length) {
     const key = args.shift();
+    if (key === '--avoid-orphans') { options.avoidOrphans = true; continue; }
     if (key === '--keep-links') { options.linkFootnotes = false; continue; }
     if (key === '--link-footnotes') { options.linkFootnotes = true; continue; }
-    if (!['--theme','--vault','--out','--font-size'].includes(key)) throw new Error(`未知参数：${key}`);
+    if (!['--theme','--vault','--out','--font-size','--code-max-height'].includes(key)) throw new Error(`未知参数：${key}`);
     const value = args.shift();
     if (!value || value.startsWith('--')) throw new Error(`参数缺少值：${key}`);
     if (key === '--out') out = path.resolve(value);
+    else if (key === '--code-max-height') options.codeMaxHeight = Number(value);
     else if (key === '--font-size') options.fontSize = Number(value);
     else options[key.slice(2)] = value;
   }
