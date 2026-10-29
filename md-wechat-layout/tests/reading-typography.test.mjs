@@ -85,3 +85,18 @@ test('独立图、单列图库和混排图上下留白，图片地址与尺寸�
     fs.writeFileSync(input, `图片前AI\n![](${url})\n图片后3天`);
   }
 });
+
+
+test('普通段落显式折叠空白，保留中英间距而不改变代码空格', t => {
+  const source = '官方测试中，K3.1 Pro的部分成绩接近闭源模型。\n\n> 引用AI说明。\n\n- 列表AI说明。\n\n```prompt\n  保留  两个空格\n第二行原样\n```';
+  const input = article(t, source);
+  for (const theme of themes) {
+    const html = convert(input, {theme, avoidOrphans: true}).html;
+    const body = html.match(/<p[^>]*style="([^"]*)">[\s\S]*?官方测试中/);
+    assert.ok(body && body[1].includes('white-space:normal;'));
+    assert.ok(textOf(html).includes('K3.1 Pro 的部分成绩'));
+    assert.match(html, /white-space:pre-wrap/);
+    assert.ok(textOf(html).includes('  保留  两个空格'));
+    assert.equal(fs.readFileSync(input, 'utf8'), source);
+  }
+});
