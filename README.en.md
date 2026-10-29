@@ -9,7 +9,7 @@ My personal collection of Codex skills. All custom skills live in a dedicated to
 | Skill | Purpose |
 | --- | --- |
 | [gzh-webchat-cover](gzh-webchat-cover/SKILL.md) | Turn long Chinese article titles into cinematic, product-tech, or editorial-diagram covers |
-| [md-wechat-layout](md-wechat-layout/SKILL.md) | Convert Markdown to WeChat rich text with Blue Journal defaults, consistent spacing, unindented paragraphs, Chinese corner quotes, CJK/Latin spacing, and mobile paragraph review |
+| [md-wechat-layout](md-wechat-layout/SKILL.md) | Convert Markdown to WeChat rich text with Blue Journal defaults, 15px body text, consistent spacing, unindented paragraphs, Chinese corner quotes, CJK/Latin spacing, and mobile paragraph review |
 | [gzh-final-check](gzh-final-check/SKILL.md) | Review language, test claims, media integrity, case explanations, and reader promises; inspect covers and previews when supplied; read-only by default |
 | [wechat-article-writing](wechat-article-writing/SKILL.md) | Plan and revise AI articles with sufficient evidence, traceable author judgments, natural Chinese sentences and paragraph progression, preserving genuine reactions and test or sponsorship limitations |
 | [gzh-topic-planning](gzh-topic-planning/SKILL.md) | Research six traceable topic sources, compare up to three candidates against account history, and recommend a minimal hands-on trial without viral-score thresholds |
@@ -36,7 +36,7 @@ The default **Blue Journal** (`晴蓝手记`) style uses black body text on whit
 - Resolve and embed local Obsidian images with small rounded corners and soft shadows.
 - Render fenced code in light browser-style windows; previews scroll, while copied content remains fully expanded.
 - Convert links and inline code to display text by default, without adding references.
-- Blue Journal uses the WeChat system font stack, 16px body text, 25.6px line height, 1px letter spacing, pale blue highlights, sky blue section labels, and pale blue prompt/code window headers. The final label becomes a smaller END (60px by default versus 72px numbers), with its title intact. Images return to natural responsive sizing without percentage scaling, using 32px padding on both sides of a full-width border-box container; verify by pasting again into WeChat.
+- Blue Journal uses the WeChat system font stack, 15px body text, 25.5px line height (1.7 times), 1px letter spacing, pale blue highlights, sky blue section labels, and pale blue prompt/code window headers. The final label becomes a smaller END (56.25px by default versus 67.5px numbers), with its title intact. Images return to natural responsive sizing without percentage scaling, using 32px padding on both sides of a full-width border-box container; verify by pasting again into WeChat.
 - Keep the source Markdown unchanged; compatibility formatting may extend emphasis to an entire paragraph.
 
 ### Installation

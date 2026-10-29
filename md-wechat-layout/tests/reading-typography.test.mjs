@@ -53,7 +53,7 @@ test('标题与普通段落留一行间距，首行不缩进，段落不按字�
   for (const theme of themes) {
     for (const fontSize of [12, 16, 24]) {
       const html = convert(input, { theme, fontSize }).html;
-      const gap = Number((fontSize * (theme === '晴蓝手记' ? 1.6 : 1.9)).toFixed(2));
+      const gap = Number((fontSize * (theme === '晴蓝手记' ? 1.7 : 1.9)).toFixed(2));
       for (const heading of html.matchAll(/<h[1-6][^>]*style="([^"]*)"/g)) {
         assert.ok(heading[1].includes(`margin-bottom:${gap}px;`));
       }

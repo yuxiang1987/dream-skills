@@ -22,11 +22,11 @@ test('两种主题保留正文、内联样式、代码高亮，外链转参考�
     assert.match(result.html, /background-color:#ffffff;padding:14px 16px/);
     assert.doesNotMatch(result.html, /隐藏属性|data-line=/);
     assert.doesNotMatch(result.html, /<span[^>]*background-image:[^>]*gradient/);
-    assert.match(result.html, /<p[^>]*line-height:30.4px/);
+    assert.match(result.html, /<p[^>]*line-height:28.5px/);
   }
   assert.notEqual(convert(input, { theme: '雾蓝气泡' }).html, convert(input, { theme: '薄荷气泡' }).html);
   assert.doesNotMatch(convert(input, { theme: '雾蓝气泡' }).html, /参考资料/);
-  assert.match(convert(input, { theme: '雾蓝气泡' }).html, /font-size:16px;line-height:30.4px/);
+  assert.match(convert(input, { theme: '雾蓝气泡' }).html, /font-size:15px;line-height:28.5px/);
   assert.match(convert(input, { theme: '青山绿水' }).html, /<p[^>]*>正文 <strong[^>]*>强调<\/strong><\/p>/);
   assert.equal(convert(input, { theme: '雾蓝气泡' }).theme, '雾蓝气泡');
   assert.doesNotMatch(convert(input, { theme: '雾蓝气泡' }).html, /background-color:#f0f5fa;border:1px dashed #b8cee2/);
@@ -34,7 +34,7 @@ test('两种主题保留正文、内联样式、代码高亮，外链转参考�
   assert.equal(convert(input, { theme: 'mist-blue' }).html, convert(input, { theme: '雾蓝气泡' }).html);
   assert.match(convert(input, { theme: '雾蓝气泡' }).html, /<strong/);
   const mint = convert(input, { theme: '薄荷气泡' }).html;
-  assert.match(mint, /<h2[^>]*font-size:18.4px;line-height:34.96px;[^>]*>✧ 小节<\/h2>/);
+  assert.match(mint, /<h2[^>]*font-size:17.25px;line-height:32.77px;[^>]*>✧ 小节<\/h2>/);
   assert.doesNotMatch(mint, /<h2[^>]*><span/);
 });
 
@@ -88,6 +88,6 @@ test('列表及段落行内代码统一文本尺寸，围栏代码保持独立�
   assert.match(html, /本文写进 AGENTS.md。/);
   assert.match(html, /可用 \[\[笔记名\]\]，安装到官网。/);
   assert.doesNotMatch(html, /<a\b|<span[^>]*>AGENTS.md/);
-  assert.match(html, /<section[^>]*font-size:16px;line-height:30.4px[^>]*>•&nbsp;Schema/);
+  assert.match(html, /<section[^>]*font-size:15px;line-height:28.5px[^>]*>•&nbsp;Schema/);
   assert.match(html, /<code[^>]*font-size:13px;line-height:1.7/);
 });

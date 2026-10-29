@@ -40,7 +40,7 @@ export function normalizeObsidian(source, warnings = []) {
   return source.replace(/\u0000CODE(\d+)\u0000/g, (_, i) => protectedParts[Number(i)]);
 }
 
-export function convert(input, { theme = 'blue-journal', vault, fontSize = 16, linkFootnotes = false, codeMaxHeight = 320, avoidOrphans = false } = {}) {
+export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, linkFootnotes = false, codeMaxHeight = 320, avoidOrphans = false } = {}) {
   const mistBlue = (aliases[theme] || theme) === 'mist-blue';
   const selected = [...themes, blueJournal].find(t => t.id === (mistBlue ? 'mint-soda' : (aliases[theme] || theme)));
   if (!selected || !['cyan-scape', 'mint-soda', 'blue-journal'].includes(selected.id)) throw new Error(`不支持的主题：${theme}`);
@@ -103,11 +103,11 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 16, l
     }
     for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] = `${withoutTextMetrics(custom[key])}font-size:${fontSize}px;line-height:${fontSize * 1.9}px;`;
     if (selected.id === 'blue-journal') {
-      for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] = `${withoutTextMetrics(custom[key])}font-size:${fontSize}px;line-height:${Number((fontSize * 1.6).toFixed(2))}px;`;
+      for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] = `${withoutTextMetrics(custom[key])}font-size:${fontSize}px;line-height:${Number((fontSize * 1.7).toFixed(2))}px;`;
       for (const key of ['th', 'td']) custom[key] += 'font-size:14px;line-height:26px;overflow-wrap:break-word;';
     }
     if (selected.id === 'mint-soda') for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] += 'text-align:left;';
-    const paragraphGap = Number((fontSize * (selected.id === 'blue-journal' ? 1.6 : 1.9)).toFixed(2));
+    const paragraphGap = Number((fontSize * (selected.id === 'blue-journal' ? 1.7 : 1.9)).toFixed(2));
     for (const key of ['p', 'liP', 'bqP']) custom[key] += `text-indent:0;margin-bottom:${paragraphGap}px;white-space:normal;`;
     custom.p = custom.p.replace(/text-align:[^;]*;/g, '') + 'text-align:justify;text-align-last:left;';
     for (const key of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) custom[key] = `${custom[key] || base[key]}margin-bottom:${paragraphGap}px;`;
@@ -177,7 +177,7 @@ function main() {
   const args = process.argv.slice(2);
   const input = args.shift();
   if (!input || input === '--help') {
-    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 16] [--code-max-height 320] [--avoid-orphans] [--link-footnotes]'); return;
+    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 15] [--code-max-height 320] [--avoid-orphans] [--link-footnotes]'); return;
   }
   const options = {};
   let out = path.join(path.dirname(path.resolve(input)), 'wechat-output');

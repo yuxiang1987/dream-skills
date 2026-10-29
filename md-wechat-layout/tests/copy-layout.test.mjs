@@ -26,12 +26,14 @@ test('完整复制实际携带正文中的内联滚动样式与全部提示词',
   assert.match(html,/max-height:320px;overflow:auto;box-sizing:border-box/);
   const copied=await copy(html);assert.equal(copied.payload,html);assert.match(copied.status,/已复制富文本/);
   assert.match(copied.payload,/text-align:justify;text-align-last:left;/);
+  assert.match(copied.payload,/<p[^>]*font-size:15px;line-height:25.5px/);
   assert.equal((copied.payload.match(/中文提示词/g)||[]).length,80);
 });
 test('备用复制不解除限高，也不裁掉长代码内容',async t=>{
   const html=convert(article(t,sample)).html;
   const copied=await copy(html,true);assert.equal(copied.command,'copy');assert.equal(copied.payload,html);
   assert.match(copied.payload,/text-align:justify;text-align-last:left;/);
+  assert.match(copied.payload,/<p[^>]*font-size:15px;line-height:25.5px/);
   assert.doesNotMatch(preview(html,'预览',[]),/max-height:none|body\.copying/);
 });
 test('代码窗口可显式展开或调整限高，非法高度报错',t=>{

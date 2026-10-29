@@ -13,7 +13,7 @@ export const blueJournal = {
   lastH2Index: 'END',
   imageSideSpacingPx: 32,
   styles: (primary, size, font) => ({
-    container: `font-family:${WECHAT_FONT};font-size:${size}px;line-height:1.6;color:#1a1a1a;letter-spacing:1px;padding:0;word-break:break-word;overflow-wrap:anywhere;`,
+    container: `font-family:${WECHAT_FONT};font-size:${size}px;line-height:1.7;color:#1a1a1a;letter-spacing:1px;padding:0;word-break:break-word;overflow-wrap:anywhere;`,
     h1: `font-size:${size * 1.5}px;line-height:${size * 2.2}px;font-weight:700;text-align:center;color:#222222;margin:24px 10px;`,
     h2: `font-size:${size * 1.25}px;line-height:${size * 2}px;font-weight:700;text-align:center;color:#333333;margin:0 10px 24px;padding:0;border:none;`,
     h2Index: `font-family:Arial,Helvetica,sans-serif;font-size:${size * 4.5}px;line-height:${size * 5.25}px;font-weight:700;font-style:italic;text-align:center;color:${BLUE};margin:32px 0 8px;letter-spacing:-2px;`,

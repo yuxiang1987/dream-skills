@@ -21,7 +21,7 @@ test('晴蓝手记恢复自适应图片，用对称固定内边距，保留原�
   const filename = path.join(path.dirname(input), '图.png');
   fs.writeFileSync(filename, bytes);
   const html = convert(input, { theme: '晴蓝手记' }).html;
-  assert.match(html, /<section[^>]*margin:30.4px 0;width:100%;padding:0 32px;box-sizing:border-box;text-align:center;[^>]*><img/);
+  assert.match(html, /<section[^>]*margin:28.5px 0;width:100%;padding:0 32px;box-sizing:border-box;text-align:center;[^>]*><img/);
   assert.match(html, /<img[^>]*style="[^"]*width:auto;height:auto;max-width:100%;margin:0 auto/);
   assert.match(html, /<img[^>]*display:inline-block;vertical-align:middle/);
   assert.doesNotMatch(html, /<p[^>]*text-align:left[^>]*><img/);
@@ -65,13 +65,13 @@ test('晴蓝手记保留内容和源文，编号分块，只有显式高亮铺�
   const { html, theme } = convert(input, { theme: '晴蓝手记' });
   assert.equal(theme, '晴蓝手记');
   assert.equal(fs.readFileSync(input, 'utf8'), source);
-  assert.match(html, /<p[^>]*font-size:72px;line-height:84px[^>]*color:#8dd6ff[^>]*>01<\/p><h2/);
+  assert.match(html, /<p[^>]*font-size:67.5px;line-height:78.75px[^>]*color:#8dd6ff[^>]*>01<\/p><h2/);
   assert.match(html, /<h2[^>]*>开始实操<\/h2><\/section>/);
   assert.match(html, />END<\/p><h2[^>]*>观察结果<\/h2>/);
   assert.equal((html.match(/aria-hidden="true"/g) || []).length, 2);
   assert.match(html, /<strong[^>]*color:#1a1a1a[^>]*>黑色粗体<\/strong>/);
   assert.match(html, /<mark[^>]*background-color:#e8f7ff[^>]*font-size:inherit[^>]*>跨行也保留的浅蓝重点<\/mark>/);
-  assert.match(html, /<p[^>]*font-size:16px;line-height:25.6px/);
+  assert.match(html, /<p[^>]*font-size:15px;line-height:25.5px/);
   assert.match(html, /<blockquote/);
   assert.match(html, /<table/);
   assert.match(html, /const/);
@@ -108,8 +108,8 @@ test('最后一节自动标小号END，标题和章节顺序保留，高亮恢�
   const highlightColor = html.match(/<mark[^>]*background-color:(#[0-9a-f]{6})/)[1];
   assert.equal(highlightColor, '#e8f7ff');
   assert.equal(numberColor, '#8dd6ff');
-  assert.match(html, /<p[^>]*font-size:72px;line-height:84px[^>]*>01<\/p>/);
-  assert.match(html, /<p[^>]*font-size:60px;line-height:72px[^>]*>END<\/p>/);
+  assert.match(html, /<p[^>]*font-size:67.5px;line-height:78.75px[^>]*>01<\/p>/);
+  assert.match(html, /<p[^>]*font-size:56.25px;line-height:67.5px[^>]*>END<\/p>/);
   for (const fontSize of [12, 18, 24]) {
     const resized = convert(input, { theme: '晴蓝手记', fontSize }).html;
     assert.match(resized, new RegExp(`<p[^>]*font-size:${fontSize * 3.75}px;line-height:${fontSize * 4.5}px[^>]*>END</p>`));
@@ -134,12 +134,12 @@ test('旧主题继续不自动编号，普通加粗不产生高亮', t => {
   assert.doesNotMatch(convert(input, { theme: '晴蓝手记' }).html, /<mark/);
 });
 
-test('晴蓝手记使用参考微信字体栈与1.6倍正文行高，保留等宽代码', t => {
+test('晴蓝手记使用参考微信字体栈与1.7倍正文行高，保留等宽代码', t => {
   const input = article(t, '正文 **强调**\n\n- 列表内容\n\n> 引用内容\n\n```js\nconst x = 1;\n```');
   for (const fontSize of [12, 16, 18, 24]) {
     const html = convert(input, { theme: '晴蓝手记', fontSize }).html;
     assert.match(html, /font-family:&quot;PingFang SC NEW&quot;,system-ui,-apple-system,BlinkMacSystemFont,&quot;Helvetica Neue&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei UI&quot;,&quot;Microsoft YaHei&quot;,Arial,sans-serif/);
-    const lineHeight = Number((fontSize * 1.6).toFixed(2));
+    const lineHeight = Number((fontSize * 1.7).toFixed(2));
     for (const content of ['正文', '列表内容', '引用内容']) {
       assert.match(html, new RegExp(`<(?:p|section)[^>]*font-size:${fontSize}px;line-height:${lineHeight}px[^>]*>[^<]*${content}`));
     }
@@ -167,4 +167,24 @@ test('省略主题的API与CLI均使用晴蓝手记，保留其他主题显式�
   assert.equal(JSON.parse(fs.readFileSync(result.report, 'utf8')).theme, '晴蓝手记');
   assert.equal(fs.readFileSync(input, 'utf8'), source);
   assert.notEqual(convert(input, { theme: '雾蓝气泡' }).html, expected.html);
+});
+
+test('默认正文15px与晴蓝1.7倍行高进入API和CLI，显式字号仍有效', t => {
+  const source = '正文 **加粗** 与 ==高亮==。\n\n- 列表内容\n\n> 引用内容\n\n```prompt\n  保留  提示词\n```';
+  const input = article(t, source);
+  for (const theme of ['晴蓝手记', '雾蓝气泡', '薄荷气泡', '青山绿水']) {
+    const html = convert(input, {theme}).html;
+    const lineHeight = theme === '晴蓝手记' ? 25.5 : 28.5;
+    for (const content of ['正文', '列表内容', '引用内容']) {
+      assert.match(html, new RegExp(`<(?:p|section)[^>]*font-size:15px;line-height:${lineHeight}px[^>]*>[^<]*${content}`));
+    }
+    assert.match(html, /<strong[^>]*font-size:inherit/);
+    assert.match(html, /<code[^>]*font-size:13px;line-height:1.7/);
+  }
+  assert.match(convert(input, {fontSize:16}).html, /<p[^>]*font-size:16px;line-height:27.2px/);
+  const out = path.join(path.dirname(input), 'default-font');
+  const cli = fileURLToPath(new URL('../scripts/render.mjs', import.meta.url));
+  const result = JSON.parse(execFileSync(process.execPath, [cli, input, '--out', out], {encoding:'utf8'}));
+  assert.equal(fs.readFileSync(result.fragment, 'utf8'), convert(input).html);
+  assert.equal(fs.readFileSync(input, 'utf8'), source);
 });
