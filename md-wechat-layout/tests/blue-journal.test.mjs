@@ -179,6 +179,7 @@ test('默认正文15px与晴蓝1.7倍行高进入API和CLI，显式字号仍有�
       assert.match(html, new RegExp(`<(?:p|section)[^>]*font-size:15px;line-height:${lineHeight}px[^>]*>[^<]*${content}`));
     }
     assert.match(html, /<strong[^>]*font-size:inherit/);
+    assert.doesNotMatch(html, /<p[^>]*style="[^"]*;;/);
     assert.match(html, /<code[^>]*font-size:13px;line-height:1.7/);
   }
   assert.match(convert(input, {fontSize:16}).html, /<p[^>]*font-size:16px;line-height:27.2px/);

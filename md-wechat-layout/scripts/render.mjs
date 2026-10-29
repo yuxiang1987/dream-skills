@@ -92,7 +92,7 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     // WeChat may reparent paragraphs into its own font-sized wrappers on paste.
     // Set both dimensions on each body paragraph instead of inheriting the root.
     custom.li = base.li;
-    const withoutTextMetrics = style => style.split(';').filter(property => !/^\s*(font-family|font-size|line-height|vertical-align):/.test(property)).join(';') + ';';
+    const withoutTextMetrics = style => style.split(';').filter(property => property.trim() && !/^\s*(font-family|font-size|line-height|vertical-align):/.test(property)).join(';') + ';';
     if (selected.id === 'mint-soda') {
       const headingSize = Number((fontSize * 1.15).toFixed(2));
       custom.h2 = `${withoutTextMetrics(base.h2)}font-size:${headingSize}px;line-height:${Number((headingSize * 1.9).toFixed(2))}px;`;
