@@ -100,3 +100,29 @@ test('普通段落显式折叠空白，保留中英间距而不改变代码空�
     assert.equal(fs.readFileSync(input, 'utf8'), source);
   }
 });
+
+test('正文两端对齐且末行左对齐，不绑段尾，不影响标题、图片或代码', t => {
+  const source = '## 居中标题。\n\n另外三张图分别用来参考建筑细节、雕像与城市的比例，以及云层和光线。\n\n这个案例整体中规中矩，也能正常跑完一场比赛。\n\n![](https://example.com/image.png)\n\n```prompt\n  原始  提示词\n第二行原样\n```';
+  const input = article(t, source);
+  for (const theme of themes) {
+    const html = convert(input, {theme}).html;
+    for (const text of ['另外三张图', '这个案例整体']) {
+      const paragraph = html.match(new RegExp('<p[^>]*style="([^"]*)">' + text));
+      assert.ok(paragraph, theme);
+      assert.match(paragraph[1], /text-align:justify;/);
+      assert.match(paragraph[1], /text-align-last:left;/);
+      assert.doesNotMatch(paragraph[1], /text-align:left;/);
+    }
+    assert.doesNotMatch(html, /data-reading-tail/);
+    assert.ok(textOf(html).includes('以及云层和光线。'));
+    assert.ok(textOf(html).includes('  原始  提示词'));
+    assert.ok(textOf(html).includes('第二行原样'));
+    assert.match(html, /<code[^>]*text-align:left/);
+    assert.match(html, /white-space:pre-wrap/);
+    if (theme === '晴蓝手记') {
+      assert.match(html, /<h2[^>]*text-align:center/);
+      assert.match(html, /<section[^>]*text-align:center[^>]*><img/);
+    }
+  }
+  assert.equal(fs.readFileSync(input, 'utf8'), source);
+});

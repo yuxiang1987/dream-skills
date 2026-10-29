@@ -109,6 +109,7 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 16, l
     if (selected.id === 'mint-soda') for (const key of ['p', 'liP', 'bqP', 'li']) custom[key] += 'text-align:left;';
     const paragraphGap = Number((fontSize * (selected.id === 'blue-journal' ? 1.6 : 1.9)).toFixed(2));
     for (const key of ['p', 'liP', 'bqP']) custom[key] += `text-indent:0;margin-bottom:${paragraphGap}px;white-space:normal;`;
+    custom.p = custom.p.replace(/text-align:[^;]*;/g, '') + 'text-align:justify;text-align-last:left;';
     for (const key of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) custom[key] = `${custom[key] || base[key]}margin-bottom:${paragraphGap}px;`;
     custom.gallery = `${base.gallery}margin-top:${paragraphGap}px;margin-bottom:${paragraphGap}px;`;
     for (const key of ['strong', 'em', 's', 'mark', 'a', 'code']) {
