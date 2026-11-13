@@ -40,7 +40,7 @@ export function normalizeObsidian(source, warnings = []) {
   return source.replace(/\u0000CODE(\d+)\u0000/g, (_, i) => protectedParts[Number(i)]);
 }
 
-export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, linkFootnotes = false, codeMaxHeight = 320, avoidOrphans = false } = {}) {
+export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, linkFootnotes = false, codeMaxHeight = 320, avoidOrphans = false, brandIntro = true } = {}) {
   const mistBlue = (aliases[theme] || theme) === 'mist-blue';
   const selected = [...themes, blueJournal].find(t => t.id === (mistBlue ? 'mint-soda' : (aliases[theme] || theme)));
   if (!selected || !['cyan-scape', 'mint-soda', 'blue-journal'].includes(selected.id)) throw new Error(`不支持的主题：${theme}`);
@@ -152,6 +152,16 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
         return `<p style="${clean};background-color:#f0f5fa;border:1px dashed #b8cee2;border-radius:6px;padding:12px 16px;">`;
       });
     }
+    // 账号固定片头只进入导出结果，源Markdown不变；同一GIF已存在则不重复。
+    if (brandIntro) {
+      const intro = fs.readFileSync(new URL('../assets/brand-intro/intro.gif', import.meta.url));
+      const src = `data:image/gif;base64,${intro.toString('base64')}`;
+      if (!html.includes(src)) {
+        const opening = `<section style="margin:0 0 24px;padding:0;text-align:center;font-size:0;line-height:0;"><img src="${src}" alt="程序员梦哥：分享AI、少踩坑" width="1200" height="360" style="display:inline-block;width:100%;max-width:100%;height:auto;vertical-align:middle;${imageFinish}"></section>`;
+        html = html.replace(/^<section\b[^>]*>/, tag => tag + opening);
+      }
+      warnings.push('已使用默认像素粒子片头GIF；粘贴后检查微信转存和动画播放，失败时在后台上传原GIF替换。');
+    }
     return { html, theme: mistBlue ? '雾蓝气泡' : selected.name, warnings: [...new Set(warnings)] };
   } finally { setImageResolver(null); }
 }
@@ -177,12 +187,13 @@ function main() {
   const args = process.argv.slice(2);
   const input = args.shift();
   if (!input || input === '--help') {
-    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 15] [--code-max-height 320] [--avoid-orphans] [--link-footnotes]'); return;
+    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 15] [--code-max-height 320] [--avoid-orphans] [--link-footnotes] [--no-brand-intro]'); return;
   }
   const options = {};
   let out = path.join(path.dirname(path.resolve(input)), 'wechat-output');
   while (args.length) {
     const key = args.shift();
+    if (key === '--no-brand-intro') { options.brandIntro = false; continue; }
     if (key === '--avoid-orphans') { options.avoidOrphans = true; continue; }
     if (key === '--keep-links') { options.linkFootnotes = false; continue; }
     if (key === '--link-footnotes') { options.linkFootnotes = true; continue; }

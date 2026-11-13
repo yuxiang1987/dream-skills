@@ -73,11 +73,11 @@ test('独立图、单列图库和混排图上下留白，图片地址与尺寸�
   for (const theme of themes) {
     let html = convert(input, { theme }).html;
     assert.match(html, /<span style="display:block;margin:1.9em 0;[^>]*><img/);
-    assert.equal(decodeURI(html.match(/<img[^>]*src="([^"]+)"/)[1]), url);
+    assert.equal(decodeURI([...html.matchAll(/<img[^>]*src="([^"]+)"/g)][1][1]), url);
     assert.match(textOf(html), /图片前 AI/);
     fs.writeFileSync(input, `![](${url})\n\n![](${url})`);
     html = convert(input, { theme }).html;
-    assert.equal((html.match(/<img\b/g) || []).length, 2);
+    assert.equal((html.match(/<img\b/g) || []).length, 3);
     assert.match(html, /<section[^>]*margin-top:[\d.]+px;margin-bottom:[\d.]+px;/);
     fs.writeFileSync(input, `![](${url})`);
     html = convert(input, { theme }).html;
