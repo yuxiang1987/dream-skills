@@ -6,6 +6,8 @@ import { themes, buildStyles } from '../assets/upstream/themes.js';
 import { blueJournal } from './blue-journal.mjs';
 import { renderMarkdown, stripPreviewMeta, setImageResolver } from '../assets/upstream/renderer.js';
 
+const authorBioText = '我是梦哥，十年程序员，爱折腾 AI。分享实用工具、有趣玩法和实操心得，一起把想法做出来。';
+
 const aliases = { '青山绿水': 'cyan-scape', '青绿山水': 'cyan-scape', '薄荷气泡': 'mint-soda', '雾蓝': 'mist-blue', '雾蓝气泡': 'mist-blue', '晴蓝手记': 'blue-journal', '洛洛蓝': 'blue-journal' };
 const mime = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' };
 const escape = s => s.replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -40,7 +42,7 @@ export function normalizeObsidian(source, warnings = []) {
   return source.replace(/\u0000CODE(\d+)\u0000/g, (_, i) => protectedParts[Number(i)]);
 }
 
-export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, linkFootnotes = false, codeMaxHeight = 320, avoidOrphans = false, brandIntro = true } = {}) {
+export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, linkFootnotes = false, codeMaxHeight = 320, avoidOrphans = false, brandIntro = true, authorBio = true } = {}) {
   const mistBlue = (aliases[theme] || theme) === 'mist-blue';
   const selected = [...themes, blueJournal].find(t => t.id === (mistBlue ? 'mint-soda' : (aliases[theme] || theme)));
   if (!selected || !['cyan-scape', 'mint-soda', 'blue-journal'].includes(selected.id)) throw new Error(`不支持的主题：${theme}`);
@@ -138,6 +140,11 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     // body copy; only an explicit Markdown blockquote should become a card.
     if (/\$\$|\$[^\n$]+\$/.test(source)) warnings.push('数学公式未转换为图片，请检查预览。');
     if (selected.id === 'mint-soda') html = html.replace(/<(th|td) style="([^"]*)">/g, '<$1 style="$2min-width:5.5em;">');
+    // 个人简介仅加在导出末尾，保留用户原文；已有同一句结尾时不重复。
+    if (authorBio && !html.replace(/<[^>]*>/g, '').trim().endsWith(authorBioText)) {
+      const closing = `<section style="margin-top:32px;padding-top:20px;border-top:1px solid #e3eaf0;"><p style="${custom.p}margin:0;">${escape(authorBioText)}</p></section>`;
+      html = html.replace(/<\/section>\s*$/, closing + '</section>');
+    }
     if (mistBlue) {
       const family = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',Arial,sans-serif;";
       html = html.replace(/<(section|p|h[1-6]|blockquote|th|td|span)\b([^>]*?)style="([^"]*)"/g, (tag, element, attrs, style) => {
@@ -187,12 +194,13 @@ function main() {
   const args = process.argv.slice(2);
   const input = args.shift();
   if (!input || input === '--help') {
-    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 15] [--code-max-height 320] [--avoid-orphans] [--link-footnotes] [--no-brand-intro]'); return;
+    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 15] [--code-max-height 320] [--avoid-orphans] [--link-footnotes] [--no-brand-intro] [--no-author-bio]'); return;
   }
   const options = {};
   let out = path.join(path.dirname(path.resolve(input)), 'wechat-output');
   while (args.length) {
     const key = args.shift();
+    if (key === '--no-author-bio') { options.authorBio = false; continue; }
     if (key === '--no-brand-intro') { options.brandIntro = false; continue; }
     if (key === '--avoid-orphans') { options.avoidOrphans = true; continue; }
     if (key === '--keep-links') { options.linkFootnotes = false; continue; }
