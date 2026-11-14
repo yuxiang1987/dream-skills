@@ -21,7 +21,8 @@ test('四主题末尾加入原样简介，跟随正文指标且源稿不变',t=>
     const html=convert(file,{theme,linkFootnotes:true}).html;
     assert.ok(text(html).endsWith(bio));assert.equal(text(html).split(bio).length-1,1);
     assert.ok(html.indexOf(bio)>html.indexOf('参考资料'));
-    assert.ok(html.includes('border-top:1px solid #e3eaf0;'));
+    const rule=convert(article(t,'正文。\n\n---'),{theme,authorBio:false,brandIntro:false}).html.replace(/^.*?<\/p>/s,'').replace(/<\/section>\s*$/,'').trim();
+    assert.ok(html.includes(rule));
     assert.match(html,/<p style="[^"]*font-size:15px;line-height:(25.5|28.5)px;[^"]*">我是梦哥/);
     assert.equal(fs.readFileSync(file,'utf8'),body);
   }
@@ -50,4 +51,21 @@ test('简介作为普通正文呈现，显式字号调整仍生效',t=>{
   assert.match(html,/<p style="[^"]*font-size:18px;line-height:30.6px;[^"]*">我是梦哥/);
   assert.ok(!html.includes('关于我'));
   assert.ok(!html.includes('<h2>我是梦哥'));
+});
+
+
+test('简介前使用Markdown分隔线，已有简介或分隔线时不重复',t=>{
+  for(const theme of ['晴蓝手记','雾蓝气泡','薄荷气泡','青山绿水']){
+    const rule=convert(article(t,'正文。\n\n---'),{theme,authorBio:false,brandIntro:false}).html.replace(/^.*?<\/p>/s,'').replace(/<\/section>\s*$/,'').trim();
+    for(const ending of ['',bio,bio.replace('梦哥','**梦哥**'),'---\n\n'+bio,'---']){
+      const body='正文。\n\n'+ending,file=article(t,body);
+      const html=convert(file,{theme,brandIntro:false}).html;
+      assert.equal(text(html).split(bio).length-1,1);
+      assert.equal(html.split(rule).length-1,1);
+      assert.ok(html.indexOf(rule)<html.lastIndexOf('我是'));
+      assert.doesNotMatch(html,/border-top:1px solid #e3eaf0/);
+      assert.doesNotMatch(text(html),/---/);
+      assert.equal(fs.readFileSync(file,'utf8'),body);
+    }
+  }
 });

@@ -49,7 +49,7 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
   if (!Number.isFinite(fontSize) || fontSize < 12 || fontSize > 24) throw new Error('字号须为 12–24');
   if (!Number.isFinite(codeMaxHeight) || codeMaxHeight < 0) throw new Error('代码窗口高度须为非负数，0表示完整展开');
   const warnings = [];
-  const source = normalizeObsidian(fs.readFileSync(input, 'utf8'), warnings);
+  let source = normalizeObsidian(fs.readFileSync(input, 'utf8'), warnings);
   const root = vault ? path.resolve(vault) : null;
   let files;
   function inventory(dir) {
@@ -84,6 +84,16 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
   }
   // Pre-resolve every image so missing attachments cannot silently produce broken output.
   const tokens = new MarkdownIt({ linkify: true }).parse(source, {});
+  // 已有独立简介段落时，只在导出副本补Markdown分隔线。
+  const lastInline = tokens.at(-2);
+  if (authorBio && tokens.at(-3)?.type === 'paragraph_open' && tokens.at(-3).level === 0
+      && lastInline?.type === 'inline'
+      && lastInline.children.map(token => token.content).join('').trim() === authorBioText
+      && tokens.at(-4)?.type !== 'hr') {
+    const lines = source.split('\n');
+    lines.splice(tokens.at(-3).map[0], 0, '---', '');
+    source = lines.join('\n');
+  }
   function visit(items) { for (const token of items) { if (token.type === 'image') image(token.attrGet('src')); if (token.children) visit(token.children); } }
   visit(tokens);
   setImageResolver(image);
@@ -142,7 +152,9 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     if (selected.id === 'mint-soda') html = html.replace(/<(th|td) style="([^"]*)">/g, '<$1 style="$2min-width:5.5em;">');
     // 个人简介仅加在导出末尾，保留用户原文；已有同一句结尾时不重复。
     if (authorBio && !html.replace(/<[^>]*>/g, '').trim().endsWith(authorBioText)) {
-      const closing = `<section style="margin-top:32px;padding-top:20px;border-top:1px solid #e3eaf0;"><p style="${custom.p}margin:0;">${escape(authorBioText)}</p></section>`;
+      const separator = base.hrHtml || `<hr style="${escape(base.hr)}"/>`;
+      const hasSeparator = html.replace(/<\/section>\s*$/, '').trimEnd().endsWith(separator);
+      const closing = `${hasSeparator ? '' : separator}<p style="${custom.p}margin:0;">${escape(authorBioText)}</p>`;
       html = html.replace(/<\/section>\s*$/, closing + '</section>');
     }
     if (mistBlue) {
