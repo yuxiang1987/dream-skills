@@ -62,6 +62,11 @@ print('不计代码')
         self.assertFalse(counter.check_length(source)['passed'])
         self.assertEqual(counter.check_length(source)['body_characters'], 2499)
 
+    def test_updated_bio_does_not_pad_body(self):
+        bio = '我是梦哥，十年程序员，爱折腾 AI。分享实用 AI 工具、有趣玩法和实操心得，一起把想法做出来。'
+        for ending in [bio, bio.replace("梦哥", "**梦哥**")]:
+            self.assertEqual(counter.check_length("文"*2499+"\n\n"+ending)["body_characters"], 2499)
+
     def test_setext_headings_and_plain_reference_label(self):
         source = '不计标题\n===\n正文\n参考资料：\n不计来源'
         self.assertEqual(counter.check_length(source)['body_characters'], 2)

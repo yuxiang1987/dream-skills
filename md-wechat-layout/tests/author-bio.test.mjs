@@ -7,7 +7,7 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {convert} from '../scripts/render.mjs';
 
-const bio='我是梦哥，十年程序员，爱折腾 AI。分享实用工具、有趣玩法和实操心得，一起把想法做出来。';
+const bio='我是梦哥，十年程序员，爱折腾 AI。分享实用 AI 工具、有趣玩法和实操心得，一起把想法做出来。';
 const text=html=>html.replace(/<[^>]*>/g,'').trim();
 function article(t,body){
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'wechat-bio-'));

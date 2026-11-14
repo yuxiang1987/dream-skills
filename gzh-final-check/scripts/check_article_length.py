@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 
 MINIMUM = 2500
-AUTHOR_BIO = '我是梦哥，十年程序员，爱折腾 AI。分享实用工具、有趣玩法和实操心得，一起把想法做出来。'
+AUTHOR_BIO = '我是梦哥，十年程序员，爱折腾 AI。分享实用 AI 工具、有趣玩法和实操心得，一起把想法做出来。'
 EXCLUDED_HEADINGS = {
     '参考资料', '参考来源', '参考链接', '资料来源', '参考文献', '延伸阅读',
     'references', 'reference', 'sources', 'source',

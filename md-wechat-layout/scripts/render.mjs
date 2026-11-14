@@ -6,7 +6,7 @@ import { themes, buildStyles } from '../assets/upstream/themes.js';
 import { blueJournal } from './blue-journal.mjs';
 import { renderMarkdown, stripPreviewMeta, setImageResolver } from '../assets/upstream/renderer.js';
 
-const authorBioText = '我是梦哥，十年程序员，爱折腾 AI。分享实用工具、有趣玩法和实操心得，一起把想法做出来。';
+const authorBioText = '我是梦哥，十年程序员，爱折腾 AI。分享实用 AI 工具、有趣玩法和实操心得，一起把想法做出来。';
 
 const aliases = { '青山绿水': 'cyan-scape', '青绿山水': 'cyan-scape', '薄荷气泡': 'mint-soda', '雾蓝': 'mist-blue', '雾蓝气泡': 'mist-blue', '晴蓝手记': 'blue-journal', '洛洛蓝': 'blue-journal' };
 const mime = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' };
