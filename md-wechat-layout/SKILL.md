@@ -31,7 +31,7 @@ description: 将 Obsidian 或普通 Markdown 文章排版为可复制到微信�
 
 ## 默认开头 GIF
 
-按用户确认，排版时默认在正文最前面放置「程序员梦哥」像素粒子消散版GIF：左侧走入、顶中砖、七枚原绘工具图标、降旗后像素粒子消散，最后显示「分享AI、少踩坑」。固定资源为 [assets/brand-intro/intro.gif](assets/brand-intro/intro.gif)，不是翻转版；渲染器自动内嵌到正文HTML与完整复制内容，无需在Markdown再手动插入，源稿保持不变。原文已包含同一GIF时不重复添加；用户明确要求不要片头时传 `--no-brand-intro`（调用convert时为`brandIntro:false`）。资源身份和验收边界见 [片头说明](references/brand-intro.md)。公众号后台是否保留GIF和实际播放，必须粘贴/重载/真机确认；失败时上传原GIF替换，不把本地预览当作验收。
+按用户确认，排版时默认在正文最前面放置「程序员梦哥」像素粒子消散版GIF：左侧走入、顶中砖、七枚原绘工具图标、降旗后像素粒子消散，最后显示「分享AI、少踩坑」。默认内嵌已确认可单独插入的 [兼容版 GIF](assets/brand-intro/intro-wechat.gif)，原版和兼容版属于同一片头，源稿已有任一版本时不重复添加。CLI 同时在预览旁导出 `.intro.gif`，预览顶部提供「单独下载片头 GIF」，下载入口不进入复制内容。片头粘贴失败时只替换开头那一块，使用导出的 GIF。用户明确不要片头时传 `--no-brand-intro`（调用 convert 时为 `brandIntro:false`）。整篇粘贴、微信转存及保存后播放仍需实测。资源说明见 [片头说明](references/brand-intro.md)。
 
 ## 默认结尾个人简介
 
