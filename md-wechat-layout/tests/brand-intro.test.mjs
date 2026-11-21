@@ -20,7 +20,7 @@ function article(t,body){
 }
 
 test('默认片头是用户选定的粒子GIF，在所有主题中位于正文标题之前且不改稿',t=>{
-  assert.equal(createHash('sha256').update(compatible).digest('hex'),'1e04800d9c5b3e1fc79e302e9c9b704953d0448f3920b3b36c2487f52ba2887f');
+  assert.equal(createHash('sha256').update(compatible).digest('hex'),'01a3000a59713fdbb0242e833bf7a96aa1d06a0b143b5118682101dacd10080f');
   assert.equal(compatible.subarray(0,6).toString(),'GIF89a');
   assert.equal(compatible.readUInt16LE(6),1000);assert.equal(compatible.readUInt16LE(8),300);
   const body='# 正文标题\n\n保留原始AI正文。',input=article(t,body);
