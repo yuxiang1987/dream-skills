@@ -46,7 +46,7 @@ export function normalizeObsidian(source, warnings = []) {
   return source.replace(/\u0000CODE(\d+)\u0000/g, (_, i) => protectedParts[Number(i)]);
 }
 
-export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, linkFootnotes = false, codeMaxHeight = 320, avoidOrphans = false, brandIntro = true, authorBio = true } = {}) {
+export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, linkFootnotes = false, codeMaxHeight = 320, avoidOrphans = false, brandIntro = true, introSvg = null, authorBio = true } = {}) {
   const mistBlue = (aliases[theme] || theme) === 'mist-blue';
   const selected = [...themes, blueJournal].find(t => t.id === (mistBlue ? 'mint-soda' : (aliases[theme] || theme)));
   if (!selected || !['cyan-scape', 'mint-soda', 'blue-journal'].includes(selected.id)) throw new Error(`不支持的主题：${theme}`);
@@ -175,8 +175,20 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
         return `<p style="${clean};background-color:#f0f5fa;border:1px dashed #b8cee2;border-radius:6px;padding:12px 16px;">`;
       });
     }
-    // 兼容版及原版均视为同一片头，源稿已插入时不再添加。
-    if (brandIntro) {
+    // 兼容版及原版均视为同一片头，源稿已插入时不再添加；传入 introSvg 时使用内嵌 SVG+SMIL 替换默认 GIF。
+    if (introSvg) {
+      let rawSvg = fs.existsSync(introSvg) && fs.statSync(introSvg).isFile()
+        ? fs.readFileSync(introSvg, 'utf8').trim()
+        : String(introSvg).trim();
+      const match = rawSvg.match(/<svg\b[\s\S]*<\/svg>/i);
+      if (!match) throw new Error('自定义 SVG 片头内容无效，需包含完整的 <svg>...</svg>');
+      const svgMarkup = match[0];
+      if (!html.includes('<svg ')) {
+        const opening = `<section style="margin:0 0 24px;padding:0;text-align:center;">${svgMarkup}</section>`;
+        html = html.replace(/^<section\b[^>]*>/, tag => tag + opening);
+      }
+      warnings.push('已启用自定义 SVG+SMIL 片头；粘贴后检查微信公众号保存重载与手机端动画播放。');
+    } else if (brandIntro) {
       const src = gifDataUri(fs.readFileSync(brandIntroAsset));
       if (!html.includes(src) && !html.includes(gifDataUri(fs.readFileSync(originalBrandIntroAsset)))) {
         const opening = `<section style="margin:0 0 24px;padding:0;text-align:center;font-size:0;line-height:0;"><img src="${src}" alt="程序员梦哥：分享AI、少踩坑" width="1000" height="300" style="display:inline-block;width:100%;max-width:100%;height:auto;vertical-align:middle;${imageFinish}"></section>`;
@@ -210,7 +222,7 @@ function main() {
   const args = process.argv.slice(2);
   const input = args.shift();
   if (!input || input === '--help') {
-    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 15] [--code-max-height 320] [--avoid-orphans] [--link-footnotes] [--no-brand-intro] [--no-author-bio]'); return;
+    console.log('node scripts/render.mjs article.md [--theme 雾蓝气泡|青山绿水|薄荷气泡|晴蓝手记] [--vault 库目录] [--out 输出目录] [--font-size 15] [--code-max-height 320] [--avoid-orphans] [--link-footnotes] [--intro-svg 片头.svg] [--no-brand-intro] [--no-author-bio]'); return;
   }
   const options = {};
   let out = path.join(path.dirname(path.resolve(input)), 'wechat-output');
@@ -221,10 +233,11 @@ function main() {
     if (key === '--avoid-orphans') { options.avoidOrphans = true; continue; }
     if (key === '--keep-links') { options.linkFootnotes = false; continue; }
     if (key === '--link-footnotes') { options.linkFootnotes = true; continue; }
-    if (!['--theme','--vault','--out','--font-size','--code-max-height'].includes(key)) throw new Error(`未知参数：${key}`);
+    if (!['--theme','--vault','--out','--font-size','--code-max-height','--intro-svg'].includes(key)) throw new Error(`未知参数：${key}`);
     const value = args.shift();
     if (!value || value.startsWith('--')) throw new Error(`参数缺少值：${key}`);
     if (key === '--out') out = path.resolve(value);
+    else if (key === '--intro-svg') options.introSvg = path.resolve(value);
     else if (key === '--code-max-height') options.codeMaxHeight = Number(value);
     else if (key === '--font-size') options.fontSize = Number(value);
     else options[key.slice(2)] = value;
@@ -235,7 +248,7 @@ function main() {
   const fragment = path.join(out, `${name}.wechat.html`);
   const page = path.join(out, `${name}.preview.html`);
   const report = path.join(out, `${name}.report.json`);
-  const introGif = options.brandIntro === false ? null : path.join(out, `${name}.intro.gif`);
+  const introGif = (options.brandIntro === false || options.introSvg) ? null : path.join(out, `${name}.intro.gif`);
   if (introGif) fs.copyFileSync(brandIntroAsset, introGif);
   fs.writeFileSync(fragment, result.html);
   fs.writeFileSync(page, preview(result.html, `${name} · ${result.theme}`, result.warnings, introGif));

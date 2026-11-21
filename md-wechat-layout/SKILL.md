@@ -31,7 +31,7 @@ description: 将 Obsidian 或普通 Markdown 文章排版为可复制到微信�
 
 ## 默认开头 GIF
 
-按用户确认，排版时默认在正文最前面放置「程序员梦哥」像素粒子消散版GIF：左侧走入、顶中砖、七枚原绘工具图标、降旗后像素粒子消散，最后显示「分享AI、少踩坑」。默认内嵌已确认可单独插入的 [兼容版 GIF](assets/brand-intro/intro-wechat.gif)，原版和兼容版属于同一片头，源稿已有任一版本时不重复添加。CLI 同时在预览旁导出 `.intro.gif`，预览顶部提供「单独下载片头 GIF」，下载入口不进入复制内容。片头粘贴失败时只替换开头那一块，使用导出的 GIF。用户明确不要片头时传 `--no-brand-intro`（调用 convert 时为 `brandIntro:false`）。整篇粘贴、微信转存及保存后播放仍需实测。资源说明见 [片头说明](references/brand-intro.md)。
+按用户确认，排版时默认在正文最前面放置「程序员梦哥」像素粒子消散版GIF：左侧走入、顶中砖、七枚原绘工具图标、降旗后像素粒子消散，最后显示「分享AI、少踩坑」。默认内嵌已确认可单独插入的 [兼容版 GIF](assets/brand-intro/intro-wechat.gif)，原版和兼容版属于同一片头，源稿已有任一版本时不重复添加。CLI 同时在预览旁导出 `.intro.gif`，预览顶部提供「单独下载片头 GIF」，下载入口不进入复制内容。片头粘贴失败时只替换开头那一块，使用导出的 GIF。若已通过 `gzh-svg-intro` 为当前文章生成了定制纯 SVG+SMIL 片头，可传 `--intro-svg "片头.svg"`（调用 convert 时为 `introSvg`）在正文开头内嵌该 SVG 片头并替换默认 GIF。用户明确不要片头时传 `--no-brand-intro`（调用 convert 时为 `brandIntro:false`）。整篇粘贴、微信转存及保存后播放仍需实测。资源说明见 [片头说明](references/brand-intro.md)。
 
 ## 默认结尾个人简介
 

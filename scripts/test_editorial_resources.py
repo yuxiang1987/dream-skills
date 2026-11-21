@@ -8,7 +8,7 @@ import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-EDITORIAL_SKILLS = ("wechat-article-writing", "gzh-final-check")
+EDITORIAL_SKILLS = ("wechat-article-writing", "gzh-final-check", "gzh-svg-intro")
 
 
 class EditorialResourcesTest(unittest.TestCase):
