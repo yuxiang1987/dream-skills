@@ -35,7 +35,30 @@ class SvgPropsTest(unittest.TestCase):
                 self.assertNotIn("<defs", frag)
                 combined.append(frag)
 
-        svg = kit.assemble_svg(kit.wrap_stage("".join(combined)), "八大高精细拟物道具测试")
+        svg = kit.assemble_svg(kit.wrap_stage("".join(combined)), "第一批8个高精细拟物道具测试")
+        self.assertEqual(kit.validate_svg_compliance(svg), [])
+
+    def test_batch2_8_props_render_and_pass_wechat_compliance(self):
+        builders = [
+            ("telescope", lambda: props.prop_telescope(340, 110)),
+            ("stethoscope", lambda: props.prop_stethoscope(460, 110)),
+            ("gpu_box", lambda: props.prop_gpu_box(580, 110, fe=self.fe)),
+            ("monitor", lambda: props.prop_monitor(710, 110, fe=self.fe)),
+            ("filmstrip", lambda: props.prop_filmstrip(840, 110)),
+            ("lightbulb", lambda: props.prop_lightbulb(960, 110)),
+            ("globe", lambda: props.prop_globe(1070, 110)),
+            ("doc_file", lambda: props.prop_doc_file(1180, 110, fe=self.fe)),
+        ]
+        combined = []
+        for name, fn in builders:
+            with self.subTest(prop=name):
+                frag = fn()
+                self.assertTrue(frag.strip())
+                self.assertNotIn("<text", frag)
+                self.assertNotIn("<defs", frag)
+                combined.append(frag)
+
+        svg = kit.assemble_svg(kit.wrap_stage("".join(combined)), "第二批8个摸鱼小李同款道具测试")
         self.assertEqual(kit.validate_svg_compliance(svg), [])
 
 
