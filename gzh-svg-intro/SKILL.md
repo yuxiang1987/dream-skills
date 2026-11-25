@@ -27,16 +27,22 @@ description: 为中文 AI 实测、教程和工具评测公众号文章定制纯
 1. **读取文章标题与全文**：
    - 提取文章主角（产品/模型名）、作者亲自实测的 **2–4 个核心案例/设置项**，以及正文中令读者印象最深的具体数字、惊喜点或槽点（如 `5 小时用量 76.29%`、`C 盘迁入 D 盘释放 1TB`、`4 条编码准则`）。
    - 严禁虚构正文没有测过的功能、价格或结论。
-2. **设计一镜到底的道具隐喻与 3–4 个因果节拍**：
-   - 按 [references/storyboard-dna.md](references/storyboard-dna.md) 选择舞台结构：
-     - **调校舱插卡 + 伙伴点亮（`console-3act`）**：适合教程、设置调优、多模型接入、Agent 工作流。左侧调校舱依次落入 3 张配置卡带（机身下沉 `4.5px` 回弹、槽口飞溅火花、屏幕闪白切画面），向右发射脉冲光球，伙伴机器人（如大黄）接球弹性挤压下蹲，点亮右侧 7 项进度柱，满格后弯眼笑并冒泡。
-     - **主机连弹微缩作品卡 + 结论/槽点仪表（`showcase-4card`）**：适合模型发布实测、多案例评测。左侧标志性主机（如复古 CRT 电脑）连续 4 次蓄力回弹，沿抛物线向外弹出 4 张带**卡内持续微动效**的作品卡（如随风摇晃且阴影同步的布料、云海浮动的 3D 古城、喷氮气绕圈的卡丁车、频谱跳动的代码 MV），每张卡落位后弹出 `1.28x` 过冲绿勾；右侧弹出实测惊喜与槽点进度条面板。
-     - **全新题材自定义舞台**：导入 `scripts/build_svg_intro.py` 的 `FontEngine`、`smil_opacity`、`smil_transform`、`scale_around`、`check_badge`、`wrap_stage`、`assemble_svg`、`save_intro_bundle`，编写贴合该文章独特道具的主舞台。
+2. **按题材选型，避免千篇一律的“卡片堆叠”**：
+   - 按 [references/storyboard-dna.md](references/storyboard-dna.md) 优先根据题材匹配舞台结构（多案例横评才用卡片，流程/3D/设计/编辑器优先用无卡管道、视口或分屏）：
+     - **节点连线管道（`pipeline-nodes`，无卡片）**：适合 Agent 工作流、Skill 流水线、自动化教程。左侧光源发出一颗光点，沿虚线贝塞尔路径依次点亮 3 个里程碑节点，抵达右侧目标端并弹出绿勾。
+     - **3D 透视视口 + 2.5D 图层炸开（`viewport-3d`，无卡片堆叠）**：适合 3D 模型、生图/设计工具、空间计算与能力评测。左侧生长透视网格、坐标轴与 `animate:points` 旋转三维立方体，右侧 3 层 `skewY` 玻璃图层横向炸开再吸合。
+     - **单视口分栏工作台（`split-editor`，无多卡飞出）**：适合本地文件 AI、IDE/Coding Agent、单图多轮编辑。左侧文件右键触发，右侧分栏内左文右对话就地改写高亮。
+     - **调校舱插卡 + 伙伴点亮（`console-3act`）**：适合参数调优、多模型切换。左侧调校舱依次落入 3 张配置卡带，向右发射脉冲光球点亮伙伴机器人与 7 项进度柱。
+     - **主机连弹微缩作品卡 + 结论/槽点仪表（`showcase-4card`）**：适合多案例模型横评。左侧复古主机连弹 4 张带卡内微动效的作品卡，右侧弹出惊喜与槽点仪表。
+     - **全新题材自定义舞台**：导入 `scripts/build_svg_intro.py` 的 `FontEngine`、`smil_opacity`、`smil_attr`、`smil_stroke_draw`、`smil_transform`、`scale_around`、`rotate_around`、`skew_around`、`perspective_grid`、`check_badge`、`wrap_stage`、`assemble_svg`、`save_intro_bundle`，编写贴合该文章独特道具的无框隐喻舞台（支持自定义 `dur` 如 `5s`/`6s`/`8s`）。
 3. **文字转纯矢量 `<path>` 并生成 SVG 与预览页**：
    - 所有画面文字必须通过 `FontEngine.text(...)` 转成闭合矢量 `<path>`。
    - 调用 `save_intro_bundle(svg, out_svg, out_preview, title=...)` 自动执行合规校验（禁止 `<text>`/`<image>`/`<script>`/`<defs>`/`<style>`，强制 `calcMode="spline"` 与 `viewBox="0 0 1246 220"`）。
    - 也可用 CLI 快速生成或基于 JSON 分镜配置生成：
      ```powershell
+     python scripts/build_svg_intro.py --template pipeline-nodes --out-svg "输出目录/intro.svg" --out-preview "输出目录/preview.html"
+     python scripts/build_svg_intro.py --template viewport-3d --out-svg "输出目录/intro.svg" --out-preview "输出目录/preview.html"
+     python scripts/build_svg_intro.py --template split-editor --out-svg "输出目录/intro.svg" --out-preview "输出目录/preview.html"
      python scripts/build_svg_intro.py --template console-3act --out-svg "输出目录/intro.svg" --out-preview "输出目录/preview.html"
      python scripts/build_svg_intro.py --template showcase-4card --out-svg "输出目录/intro.svg" --out-preview "输出目录/preview.html"
      python scripts/build_svg_intro.py --spec "分镜配置.json" --out-svg "输出目录/intro.svg" --out-preview "输出目录/preview.html"

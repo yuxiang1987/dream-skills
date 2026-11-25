@@ -294,6 +294,38 @@ def smil_opacity(values: str, key_times: str, dur: str = DUR) -> str:
     return f'<animate attributeName="opacity" values="{values}" keyTimes="{key_times}" dur="{dur}" repeatCount="indefinite"/>'
 
 
+def smil_attr(
+    attr: str,
+    values: str,
+    key_times: str,
+    spline: str = "0.45 0 0.55 1",
+    dur: str = DUR,
+) -> str:
+    """通用属性 SMIL 补间（支持 points/width/height/x/y/r/fill/stroke-dashoffset）。"""
+    segs = len(key_times.split(";")) - 1
+    splines = ";".join([spline] * segs)
+    return (
+        f'<animate attributeName="{attr}" values="{values}" keyTimes="{key_times}" '
+        f'dur="{dur}" repeatCount="indefinite" calcMode="spline" keySplines="{splines}"/>'
+    )
+
+
+def smil_stroke_draw(
+    length: float,
+    t_start: float,
+    t_end: float,
+    dur: str = DUR,
+    reverse: bool = False,
+    spline: str = "0.23 1 0.32 1",
+) -> str:
+    """生成 stroke-dashoffset 描边生长动画，需配合元素上的 stroke-dasharray 使用。"""
+    v0 = 0 if reverse else length
+    v1 = length if reverse else 0
+    kt = f"0;{t_start:.3f};{t_end:.3f};1"
+    vals = f"{v0:.1f};{v0:.1f};{v1:.1f};{v1:.1f}"
+    return smil_attr("stroke-dashoffset", vals, kt, spline=spline, dur=dur)
+
+
 def smil_transform(
     kind: str,
     values: str,
@@ -310,15 +342,83 @@ def smil_transform(
     )
 
 
-def scale_around(cx: float, cy: float, values: str, key_times: str, inner: str, spline: str = "0.23 1 0.32 1") -> str:
+def scale_around(
+    cx: float,
+    cy: float,
+    values: str,
+    key_times: str,
+    inner: str,
+    spline: str = "0.23 1 0.32 1",
+    dur: str = DUR,
+) -> str:
     return (
         f'<g transform="translate({cx} {cy})"><g>'
-        f'{smil_transform("scale", values, key_times, spline)}'
+        f'{smil_transform("scale", values, key_times, spline, dur=dur)}'
         f'<g transform="translate({-cx} {-cy})">{inner}</g></g></g>'
     )
 
 
-def check_badge(cx: float, cy: float, r: float, t_appear: float) -> str:
+def rotate_around(
+    cx: float,
+    cy: float,
+    values: str,
+    key_times: str,
+    inner: str,
+    spline: str = "0.23 1 0.32 1",
+    dur: str = DUR,
+) -> str:
+    """围绕中心点 (cx, cy) 做旋转动画。"""
+    return (
+        f'<g transform="translate({cx} {cy})"><g>'
+        f'{smil_transform("rotate", values, key_times, spline, dur=dur)}'
+        f'<g transform="translate({-cx} {-cy})">{inner}</g></g></g>'
+    )
+
+
+def skew_around(
+    axis: str,
+    cx: float,
+    cy: float,
+    values: str,
+    key_times: str,
+    inner: str,
+    spline: str = "0.23 1 0.32 1",
+    dur: str = DUR,
+) -> str:
+    """围绕中心点 (cx, cy) 做 2.5D 轴测斜切动画（skewX / skewY）。"""
+    return (
+        f'<g transform="translate({cx} {cy})"><g>'
+        f'{smil_transform(axis, values, key_times, spline, dur=dur)}'
+        f'<g transform="translate({-cx} {-cy})">{inner}</g></g></g>'
+    )
+
+
+def perspective_grid(
+    cx: float,
+    y_horizon: float,
+    y_bottom: float,
+    top_w: float,
+    bot_w: float,
+    cols: int = 6,
+    rows: int = 4,
+    stroke: str = "#CBD5E1",
+) -> str:
+    """生成纯矢量 3D 透视地面网格（无 <defs>）。"""
+    lines: list[str] = []
+    for i in range(cols + 1):
+        t = i / cols - 0.5
+        x1 = cx + t * top_w
+        x2 = cx + t * bot_w
+        lines.append(f'<line x1="{x1:.1f}" y1="{y_horizon:.1f}" x2="{x2:.1f}" y2="{y_bottom:.1f}" stroke="{stroke}" stroke-width="1"/>')
+    for j in range(rows + 1):
+        p = (j / rows) ** 1.35
+        y = y_horizon + p * (y_bottom - y_horizon)
+        w = top_w + p * (bot_w - top_w)
+        lines.append(f'<line x1="{cx - w / 2:.1f}" y1="{y:.1f}" x2="{cx + w / 2:.1f}" y2="{y:.1f}" stroke="{stroke}" stroke-width="1"/>')
+    return "".join(lines)
+
+
+def check_badge(cx: float, cy: float, r: float, t_appear: float, dur: str = DUR) -> str:
     t1 = f"{t_appear:.3f}"
     t2 = f"{t_appear + 0.025:.3f}"
     t3 = f"{t_appear + 0.045:.3f}"
@@ -328,26 +428,29 @@ def check_badge(cx: float, cy: float, r: float, t_appear: float) -> str:
         f'<path d="M{cx - 4.5 * s:.1f} {cy:.1f}l{3 * s:.1f} {3.2 * s:.1f}l{6.5 * s:.1f}-{6.5 * s:.1f}" '
         f'fill="none" stroke="#FFFFFF" stroke-width="{2.4 * s:.1f}" stroke-linecap="round" stroke-linejoin="round"/>'
     )
-    return scale_around(cx, cy, "0;0;1.28;1;1", f"0;{t1};{t2};{t3};1", inner)
+    return scale_around(cx, cy, "0;0;1.28;1;1", f"0;{t1};{t2};{t3};1", inner, dur=dur)
 
 
-def load_brand_opener() -> str:
-    """加载预烘焙的「像素梦哥 + 16 组点阵字坍缩粒子」固定母版片段。"""
-    return OPENER_ASSET.read_text(encoding="utf-8")
+def load_brand_opener(dur: str = DUR) -> str:
+    """加载预烘焙的「像素梦哥 + 16 组点阵字坍缩粒子」固定母版片段，支持同步主周期 dur。"""
+    frag = OPENER_ASSET.read_text(encoding="utf-8")
+    if dur != DUR:
+        frag = frag.replace(f'dur="{DUR}"', f'dur="{dur}"')
+    return frag
 
 
-def wrap_stage(stage_inner: str) -> str:
-    """包一层主舞台 1.76s 淡入、7.04s 淡出控制器。"""
+def wrap_stage(stage_inner: str, dur: str = DUR) -> str:
+    """包一层主舞台 0.22 淡入、0.88 淡出控制器。"""
     return (
         f'<g opacity="0">'
-        f'{smil_opacity("0;0;1;1;0;0", "0;.22;.26;.88;.91;1")}'
+        f'{smil_opacity("0;0;1;1;0;0", "0;.22;.26;.88;.91;1", dur=dur)}'
         f"{stage_inner}</g>"
     )
 
 
-def assemble_svg(stage_svg: str, aria_label: str) -> str:
+def assemble_svg(stage_svg: str, aria_label: str, dur: str = DUR) -> str:
     """将主舞台与品牌开场母版组装为完整的 1246×220 纯 SVG+SMIL 源码。"""
-    opener = load_brand_opener()
+    opener = load_brand_opener(dur=dur)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" '
         f'preserveAspectRatio="xMidYMid meet" role="img" aria-label="{escape_xml(aria_label)}" '
@@ -849,10 +952,285 @@ def render_showcase_4card(spec: dict, fe: FontEngine) -> str:
     return assemble_svg(stage, aria)
 
 
+# ─── 内置模板 C：pipeline-nodes（无卡片节点连线与光点传输，适合 Agent / 自动化 / 流程） ───
+def render_pipeline_nodes(spec: dict, fe: FontEngine) -> str:
+    dur = spec.get("dur", "6s")
+    source_label = spec.get("source_label", "灵感输入")
+    target_label = spec.get("target_label", "自动交付")
+    badge_text = spec.get("badge_text", "4 步自动跑通")
+    nodes = spec.get(
+        "nodes",
+        [
+            {"label": "拆解意图", "tag": "01", "color": "#1E6FFF"},
+            {"label": "工具调用", "tag": "02", "color": "#8B5CF6"},
+            {"label": "结果校验", "tag": "03", "color": "#0EA5E9"},
+        ],
+    )
+    coords = [(505, 76), (705, 136), (905, 76)]
+    sx, sy = 310, 110
+    tx, ty = 1100, 110
+
+    # 源头：发光核心（无矩形外框）
+    bulb_inner = (
+        f'<circle cx="{sx}" cy="{sy}" r="38" fill="#FEF3C7" opacity=".55">'
+        f'{smil_attr("r", "30;30;44;38;38", "0;.26;.32;.38;1", dur=dur)}</circle>'
+        f'<circle cx="{sx}" cy="{sy}" r="26" fill="#F59E0B" stroke="#FFFFFF" stroke-width="3"/>'
+        f'<path d="M{sx-9} {sy-2}a9 9 0 1 1 18 0c0 4-3 6-4 9h-10c-1-3-4-5-4-9z" fill="#FFFFFF"/>'
+        f'<rect x="{sx-5}" y="{sy+9}" width="10" height="4" rx="2" fill="#FEF3C7"/>'
+        f'{fe.text(source_label, 13, sx - 26, sy + 56, "#475569", True)}'
+    )
+    bulb_svg = scale_around(sx, sy, ".6;.6;1.12;1;1", "0;.24;.29;.34;1", bulb_inner, dur=dur)
+
+    # 虚线主路径（分段描边生长）
+    pts = [(sx + 34, sy)] + coords + [(tx - 42, ty)]
+    links_svg = []
+    for i in range(len(pts) - 1):
+        x1, y1 = pts[i]
+        x2, y2 = pts[i + 1]
+        cx_mid = (x1 + x2) / 2
+        d = f"M{x1} {y1} C{cx_mid:.1f} {y1} {cx_mid:.1f} {y2} {x2} {y2}"
+        t0 = 0.28 + i * 0.10
+        t1 = t0 + 0.09
+        links_svg.append(
+            f'<path d="{d}" fill="none" stroke="#CBD5E1" stroke-width="2.5" stroke-dasharray="6 6"/>'
+            f'<path d="{d}" fill="none" stroke="#1E6FFF" stroke-width="3" stroke-linecap="round" stroke-dasharray="260">'
+            f'{smil_stroke_draw(260, t0, t1, dur=dur)}</path>'
+        )
+
+    # 沿节点跳跃的脉冲光球
+    orb_x = ";".join([f"{sx}"] + [f"{x}" for x, _ in coords] + [f"{tx}"])
+    orb_y = ";".join([f"{sy}"] + [f"{y}" for _, y in coords] + [f"{ty}"])
+    orb_kt = "0;.30;.42;.54;.66;1"
+    # translate keyTimes 需要与节点对齐
+    orb_vals = f"{sx} {sy};{sx} {sy};{coords[0][0]} {coords[0][1]};{coords[1][0]} {coords[1][1]};{coords[2][0]} {coords[2][1]};{tx} {ty}"
+    orb_svg = (
+        f'<g opacity="0">{smil_opacity("0;0;1;1;0;0", "0;.28;.31;.68;.73;1", dur=dur)}'
+        f'<g>{smil_transform("translate", orb_vals, orb_kt, spline="0.45 0 0.55 1", dur=dur)}'
+        f'<circle cx="0" cy="0" r="11" fill="#10B981" opacity=".28"/>'
+        f'<circle cx="0" cy="0" r="6" fill="#10B981" stroke="#FFFFFF" stroke-width="2"/></g></g>'
+    )
+
+    # 中间 3 个圆形里程碑节点（无卡片）
+    nodes_svg = []
+    for idx, (nx, ny) in enumerate(coords):
+        nd = nodes[idx] if idx < len(nodes) else {"label": f"步骤 {idx+1}", "tag": f"0{idx+1}", "color": "#1E6FFF"}
+        t_hit = 0.38 + idx * 0.12
+        kt = f"0;{t_hit:.2f};{t_hit+0.03:.2f};{t_hit+0.07:.2f};1"
+        label_y = ny - 36 if ny > 110 else ny + 50
+        inner = (
+            f'<circle cx="{nx}" cy="{ny}" r="26" fill="#FFFFFF" stroke="{nd["color"]}" stroke-width="3"/>'
+            f'<circle cx="{nx}" cy="{ny}" r="20" fill="{nd["color"]}" opacity=".12"/>'
+            f'{fe.text(nd["tag"], 14, nx - 9, ny + 5, nd["color"], True)}'
+            f'{fe.text(nd["label"], 12.5, nx - 26, label_y, "#1E293B", True)}'
+        )
+        nodes_svg.append(scale_around(nx, ny, ".7;.7;1.22;1;1", kt, inner, dur=dur))
+
+    # 右侧终点：地球/云端交付徽章 + 绿勾
+    target_inner = (
+        f'<circle cx="{tx}" cy="{ty}" r="38" fill="#ECFDF5" stroke="#10B981" stroke-width="3"/>'
+        f'<ellipse cx="{tx}" cy="{ty}" rx="18" ry="36" fill="none" stroke="#10B981" stroke-width="1.6" opacity=".6"/>'
+        f'<line x1="{tx-36}" y1="{ty}" x2="{tx+36}" y2="{ty}" stroke="#10B981" stroke-width="1.6" opacity=".6"/>'
+        f'{fe.text(target_label, 13, tx - 26, ty + 56, "#065F46", True)}'
+        f'{check_badge(tx + 28, ty - 28, 12, 0.70, dur=dur)}'
+    )
+    target_svg = scale_around(tx, ty, ".7;.7;1.14;1;1", "0;.65;.70;.75;1", target_inner, dur=dur)
+
+    pill = (
+        f'<g opacity="0">{smil_opacity("0;0;1;1", "0;.72;.76;1", dur=dur)}'
+        f'<rect x="975" y="16" width="160" height="28" rx="14" fill="#1E293B"/>'
+        f'{fe.text(badge_text, 12, 995, 34, "#FFFFFF", True)}</g>'
+    )
+    stage = wrap_stage(bulb_svg + "".join(links_svg) + orb_svg + "".join(nodes_svg) + target_svg + pill, dur=dur)
+    aria = spec.get(
+        "aria_label",
+        f"程序员梦哥，分享AI少踩坑；像素文字变成粒子；{source_label}发出光点依次点亮{'、'.join(n['label'] for n in nodes[:3])}三个节点，最终抵达{target_label}并弹出对勾与{badge_text}",
+    )
+    return assemble_svg(stage, aria, dur=dur)
+
+
+# ─── 内置模板 D：viewport-3d（3D 透视视口 + 旋转立方体 + 2.5D 轴测图层炸开） ───
+def render_viewport_3d(spec: dict, fe: FontEngine) -> str:
+    import math
+
+    dur = spec.get("dur", "6s")
+    viewport_tag = spec.get("viewport_tag", "3D VIEWPORT")
+    summary_text = spec.get("summary_text", "多模态空间生成 · 实测通过")
+    layers = spec.get(
+        "layers",
+        [
+            {"title": "线框拓扑", "color": "#3B82F6", "bg": "#EFF6FF"},
+            {"title": "材质光影", "color": "#10B981", "bg": "#ECFDF5"},
+            {"title": "多轮精修", "color": "#8B5CF6", "bg": "#F5F3FF"},
+        ],
+    )
+
+    # 左侧 3D 取景框角标 + 透视地面网格 + XYZ 坐标轴
+    vx, vy = 450, 108
+    brackets = (
+        f'<path d="M290 44V26h22 M610 44V26h-22 M290 176v18h22 M610 176v18h-22" '
+        f'fill="none" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="120">'
+        f'{smil_stroke_draw(120, 0.24, 0.33, dur=dur)}</path>'
+    )
+    grid = (
+        f'<g opacity="0">{smil_opacity("0;0;.85;.85", "0;.25;.34;1", dur=dur)}'
+        f'{perspective_grid(vx, 128, 192, 160, 310, cols=6, rows=4, stroke="#CBD5E1")}</g>'
+    )
+    axes = (
+        f'<line x1="{vx}" y1="128" x2="{vx}" y2="42" stroke="#10B981" stroke-width="2.2" stroke-dasharray="90">'
+        f'{smil_stroke_draw(90, 0.28, 0.36, dur=dur)}</line>'
+        f'<line x1="{vx}" y1="128" x2="{vx+125}" y2="128" stroke="#EF4444" stroke-width="2.2" stroke-dasharray="130">'
+        f'{smil_stroke_draw(130, 0.28, 0.36, dur=dur)}</line>'
+        f'<line x1="{vx}" y1="128" x2="{vx-78}" y2="174" stroke="#3B82F6" stroke-width="2.2" stroke-dasharray="100">'
+        f'{smil_stroke_draw(100, 0.28, 0.36, dur=dur)}</line>'
+        f'{fe.text(viewport_tag, 11, 320, 40, "#64748B", True)}'
+    )
+
+    # 3D 透视投影旋转立方体（animate:points 驱动顶面、左面、右面）
+    def proj_cube(angle_deg: float, s: float = 34.0) -> tuple[str, str, str]:
+        rad = math.radians(angle_deg)
+        tilt = math.radians(24)
+        verts = []
+        for sx_i in (-1, 1):
+            for sy_i in (-1, 1):
+                for sz_i in (-1, 1):
+                    x0, y0, z0 = sx_i * s, sy_i * s, sz_i * s
+                    xr = x0 * math.cos(rad) - z0 * math.sin(rad)
+                    zr = x0 * math.sin(rad) + z0 * math.cos(rad)
+                    yr = y0 * math.cos(tilt) - zr * math.sin(tilt)
+                    verts.append((vx + xr, 96 + yr))
+
+        # 顶面 (y=-1: 0,1,3,2), 前/侧面按视角选两面
+        def fmt_pts(idxs: tuple[int, ...]) -> str:
+            return " ".join(f"{verts[i][0]:.1f},{verts[i][1]:.1f}" for i in idxs)
+
+        top = fmt_pts((0, 1, 5, 4))
+        front = fmt_pts((1, 3, 7, 5))
+        side = fmt_pts((0, 1, 3, 2))
+        return top, front, side
+
+    angles = [20, 35, 50, 65, 80, 65, 50, 35, 20]
+    kts = ";".join(f"{0.34 + i * 0.06:.2f}" for i in range(len(angles)))
+    tops, fronts, sides = [], [], []
+    for a in angles:
+        t_p, f_p, s_p = proj_cube(a)
+        tops.append(t_p)
+        fronts.append(f_p)
+        sides.append(s_p)
+
+    cube_svg = (
+        f'<g opacity="0">{smil_opacity("0;0;1;1", "0;.33;.38;1", dur=dur)}'
+        f'<polygon points="{tops[0]}" fill="#6EE7B7" stroke="#065F46" stroke-width="1.6">'
+        f'{smil_attr("points", ";".join(tops), kts, dur=dur)}</polygon>'
+        f'<polygon points="{fronts[0]}" fill="#10B981" stroke="#065F46" stroke-width="1.6">'
+        f'{smil_attr("points", ";".join(fronts), kts, dur=dur)}</polygon>'
+        f'<polygon points="{sides[0]}" fill="#047857" stroke="#065F46" stroke-width="1.6">'
+        f'{smil_attr("points", ";".join(sides), kts, dur=dur)}</polygon>'
+        f'</g>'
+    )
+
+    # 右侧 2.5D 轴测图层炸开（skewY=-12）
+    layer_svgs = []
+    for idx, ly in enumerate(layers[:3]):
+        dx = (idx - 1) * 115
+        lx = 910
+        tr_vals = f"0 0;0 0;{dx} 0;{dx} 0;0 0;0 0"
+        tr_kt = "0;.46;.58;.74;.82;1"
+        plate = (
+            f'<rect x="{lx - 52}" y="58" width="104" height="106" rx="12" fill="{ly["bg"]}" stroke="{ly["color"]}" stroke-width="2.4" opacity=".94"/>'
+            f'<circle cx="{lx}" cy="96" r="16" fill="{ly["color"]}" opacity=".18"/>'
+            f'{fe.text(f"L{idx+1}", 13, lx - 8, 101, ly["color"], True)}'
+            f'{fe.text(ly["title"], 12.5, lx - 26, 140, "#1E293B", True)}'
+        )
+        skewed = skew_around("skewY", lx, 111, "-12;-12;-12", "0;.5;1", plate, dur=dur)
+        layer_svgs.append(
+            f'<g opacity="0">{smil_opacity("0;0;1;1", "0;.42;.46;1", dur=dur)}'
+            f'<g>{smil_transform("translate", tr_vals, tr_kt, dur=dur)}{skewed}</g></g>'
+        )
+
+    pill = (
+        f'<g opacity="0">{smil_opacity("0;0;1;1", "0;.70;.75;1", dur=dur)}'
+        f'<rect x="785" y="182" width="260" height="28" rx="14" fill="#1E293B"/>'
+        f'{fe.text(summary_text, 12, 804, 200, "#FFFFFF", True)}'
+        f'{check_badge(1056, 196, 12, 0.74, dur=dur)}</g>'
+    )
+    stage = wrap_stage(brackets + grid + axes + cube_svg + "".join(layer_svgs) + pill, dur=dur)
+    aria = spec.get(
+        "aria_label",
+        f"程序员梦哥，分享AI少踩坑；像素文字变成粒子；{viewport_tag}透视网格与坐标轴生长，三维立方体渲染旋转，右侧三层2.5D玻璃图层横向炸开再吸合，弹出对勾与{summary_text}",
+    )
+    return assemble_svg(stage, aria, dur=dur)
+
+
+# ─── 内置模板 E：split-editor（单视口左文右对话就地改写，无多卡堆叠） ───
+def render_split_editor(spec: dict, fe: FontEngine) -> str:
+    dur = spec.get("dur", "5.5s")
+    file_name = spec.get("file_name", "report.md")
+    prompt_text = spec.get("prompt_text", "提炼 3 条结论并高亮")
+    result_text = spec.get("result_text", "已就地改写保存")
+
+    # 左侧文件图标 + 右键脉冲标签
+    file_icon = (
+        f'<g opacity="0">{smil_opacity("0;0;1;1", "0;.24;.28;1", dur=dur)}'
+        f'<rect x="278" y="60" width="76" height="96" rx="10" fill="#ECFDF5" stroke="#10B981" stroke-width="2.4"/>'
+        f'<path d="M332 60v22h22" fill="#A7F3D0" stroke="#10B981" stroke-width="2"/>'
+        f'{fe.text(file_name, 11, 288, 138, "#065F46", True)}'
+        f'<rect x="296" y="166" width="94" height="24" rx="12" fill="#1E293B">'
+        f'{smil_attr("opacity", "0;0;1;1", "0;.29;.33;1", dur=dur)}</rect>'
+        f'{fe.text("右键 AI 打开", 10.5, 309, 182, "#FFFFFF", True)}</g>'
+    )
+
+    # 中右侧单视口分栏工作台（左栏文本行就地改写，右栏对话指令触发）
+    rows = []
+    for i, (y, w0, w1, c1) in enumerate([
+        (66, 220, 260, "#1E6FFF"),
+        (92, 180, 290, "#10B981"),
+        (118, 240, 210, "#10B981"),
+        (144, 150, 275, "#8B5CF6"),
+    ]):
+        t0 = 0.50 + i * 0.04
+        t1 = t0 + 0.08
+        kt = f"0;{t0:.2f};{t1:.2f};1"
+        rows.append(
+            f'<rect x="448" y="{y}" width="{w0}" height="12" rx="6" fill="#CBD5E1">'
+            f'{smil_attr("width", f"{w0};{w0};{w1};{w1}", kt, dur=dur)}'
+            f'{smil_attr("fill", f"#CBD5E1;#CBD5E1;{c1};{c1}", kt, dur=dur)}</rect>'
+        )
+
+    workbench = (
+        f'<g opacity="0">{smil_opacity("0;0;1;1", "0;.30;.35;1", dur=dur)}'
+        f'<rect x="424" y="30" width="750" height="168" rx="14" fill="#DCE4EE"/>'
+        f'<rect x="420" y="24" width="750" height="168" rx="14" fill="#FFFFFF" stroke="#8291A5" stroke-width="2.4"/>'
+        f'<line x1="806" y1="36" x2="806" y2="180" stroke="#E2E8F0" stroke-width="2"/>'
+        f'{fe.text(file_name + " · 预览", 12, 448, 48, "#64748B", True)}'
+        f'{"".join(rows)}'
+        f'<rect x="828" y="44" width="318" height="42" rx="10" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.6">'
+        f'{smil_attr("opacity", "0;0;1;1", "0;.36;.42;1", dur=dur)}</rect>'
+        f'{fe.text(prompt_text, 12.5, 844, 70, "#1E40AF", True)}'
+        f'<rect x="828" y="106" width="318" height="14" rx="7" fill="#E2E8F0"/>'
+        f'<rect x="828" y="106" width="20" height="14" rx="7" fill="#10B981">'
+        f'{smil_attr("width", "20;20;318;318", "0;.46;.64;1", dur=dur)}</rect>'
+        f'<rect x="828" y="138" width="220" height="32" rx="10" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.6">'
+        f'{smil_attr("opacity", "0;0;1;1", "0;.66;.72;1", dur=dur)}</rect>'
+        f'{fe.text(result_text, 12.5, 846, 159, "#065F46", True)}'
+        f'{check_badge(1162, 32, 12, 0.70, dur=dur)}</g>'
+    )
+    stage = wrap_stage(file_icon + workbench, dur=dur)
+    aria = spec.get(
+        "aria_label",
+        f"程序员梦哥，分享AI少踩坑；像素文字变成粒子；右键本地文件{file_name}打开分栏工作台，右侧输入指令「{prompt_text}」，左侧文档行实时改写高亮并弹出对勾与{result_text}",
+    )
+    return assemble_svg(stage, aria, dur=dur)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--spec", help="分镜 JSON 配置文件路径")
-    parser.add_argument("--template", choices=("console-3act", "showcase-4card"), default="console-3act", help="内置分镜模板类型")
+    parser.add_argument(
+        "--template",
+        choices=("console-3act", "showcase-4card", "pipeline-nodes", "viewport-3d", "split-editor"),
+        default="console-3act",
+        help="内置分镜模板类型",
+    )
     parser.add_argument("--out-svg", required=True, help="输出的 .svg 文件路径")
     parser.add_argument("--out-preview", help="输出的交互预览 .html 文件路径")
     parser.add_argument("--title", default="程序员梦哥 · 公众号 SVG 片头", help="预览页标题")
@@ -861,7 +1239,14 @@ def main(argv: list[str] | None = None) -> int:
     spec = json.loads(Path(args.spec).read_text(encoding="utf-8")) if args.spec else {}
     template = spec.get("template", args.template)
     fe = FontEngine()
-    svg = render_showcase_4card(spec, fe) if template == "showcase-4card" else render_console_3act(spec, fe)
+    renderers = {
+        "console-3act": render_console_3act,
+        "showcase-4card": render_showcase_4card,
+        "pipeline-nodes": render_pipeline_nodes,
+        "viewport-3d": render_viewport_3d,
+        "split-editor": render_split_editor,
+    }
+    svg = renderers.get(template, render_console_3act)(spec, fe)
     info = save_intro_bundle(svg, args.out_svg, args.out_preview, title=args.title)
     print(json.dumps(info, ensure_ascii=False, indent=2))
     return 0
