@@ -38,13 +38,17 @@ test('两种主题保留正文、内联样式、代码高亮，外链转参考�
   assert.doesNotMatch(mint, /<h2[^>]*><span/);
 });
 
-test('整段加粗保留普通粗体，只有显式引用使用引用容器', () => {
+test('整段加粗与同行连续加粗均正确解析为普通粗体，不残留星号', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wechat-bold-'));
   const input = path.join(dir, '文章.md');
-  fs.writeFileSync(input, '**整段加粗**\n\n> 真正引用');
-  const html = convert(input, { theme: '雾蓝气泡' }).html;
+  fs.writeFileSync(input, '**整段加粗**\n\n下面是方案，**信息建筑派·瑞士网格**、**东方哲学派·无印留白**、**运动诗学派·Whoop 仪表**，以及 **日常办公**、**代码开发**、**设计创意** 三个按钮。\n\n> 真正引用');
+  const html = convert(input, { theme: '雾蓝气泡', authorBio: false }).html;
   assert.match(html, /<p[^>]*><strong[^>]*>整段加粗<\/strong><\/p>/);
   assert.doesNotMatch(html, /<p[^>]*background-color:#f0f5fa[^>]*>整段加粗<\/p>/);
+  assert.doesNotMatch(html, /\*\*/);
+  for (const phrase of ['信息建筑派·瑞士网格', '东方哲学派·无印留白', '运动诗学派·Whoop 仪表', '日常办公', '代码开发', '设计创意']) {
+    assert.match(html, new RegExp(`<strong[^>]*>${phrase}</strong>`));
+  }
   assert.match(html, /<blockquote/);
 });
 

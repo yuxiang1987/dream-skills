@@ -15,7 +15,7 @@ function article(t,body){
   const file=path.join(dir,'article.md');fs.writeFileSync(file,body);return file;
 }
 
-test('四主题末尾加入原样简介，跟随正文指标且源稿不变',t=>{
+test('四主题末尾加入加粗简介与上方横线，跟随正文指标且源稿不变',t=>{
   const body='# 标题\n\n原始正文。\n\n[来源](https://example.com)',file=article(t,body);
   for(const theme of ['晴蓝手记','雾蓝气泡','薄荷气泡','青山绿水']){
     const html=convert(file,{theme,linkFootnotes:true}).html;
@@ -23,15 +23,18 @@ test('四主题末尾加入原样简介，跟随正文指标且源稿不变',t=>
     assert.ok(html.indexOf(bio)>html.indexOf('参考资料'));
     const rule=convert(article(t,'正文。\n\n---'),{theme,authorBio:false,brandIntro:false}).html.replace(/^.*?<\/p>/s,'').replace(/<\/section>\s*$/,'').trim();
     assert.ok(html.includes(rule));
-    assert.match(html,/<p style="[^"]*font-size:15px;line-height:(25.5|28.5)px;[^"]*">我是梦哥/);
+    assert.match(html,/<p style="[^"]*font-size:15px;line-height:(25.5|28.5)px;[^"]*"><strong style="[^"]*font-weight:700;[^"]*">我是梦哥/);
+    assert.doesNotMatch(html,/<blockquote[^>]*>[\s\S]*我是梦哥/);
     assert.equal(fs.readFileSync(file,'utf8'),body);
   }
 });
 
-test('原文已经以同一句简介结尾时不重复，支持行内加粗',t=>{
-  for(const ending of [bio,bio.replace('梦哥','**梦哥**')]){
+test('原文已经以同一句简介结尾时不重复，支持行内加粗与引用块转普通加粗',t=>{
+  for(const ending of [bio,bio.replace('梦哥','**梦哥**'),`**${bio}**`,`> ${bio}`,`---\n\n> ${bio}`]){
     const html=convert(article(t,'正文。\n\n'+ending)).html;
     assert.equal(text(html).split(bio).length-1,1);
+    assert.match(html,/<p style="[^"]*"><strong style="[^"]*">我是梦哥/);
+    assert.doesNotMatch(html,/<blockquote[^>]*>[\s\S]*我是梦哥/);
   }
 });
 
@@ -46,18 +49,18 @@ test('个人简介与开头GIF可独立关闭，CLI同样生效',t=>{
   assert.ok(!fs.readFileSync(result.fragment,'utf8').includes(bio));
 });
 
-test('简介作为普通正文呈现，显式字号调整仍生效',t=>{
+test('简介作为普通加粗段落呈现，显式字号调整仍生效',t=>{
   const html=convert(article(t,'正文。'),{fontSize:18}).html;
-  assert.match(html,/<p style="[^"]*font-size:18px;line-height:30.6px;[^"]*">我是梦哥/);
+  assert.match(html,/<p style="[^"]*font-size:18px;line-height:30.6px;[^"]*"><strong style="[^"]*">我是梦哥/);
   assert.ok(!html.includes('关于我'));
   assert.ok(!html.includes('<h2>我是梦哥'));
 });
 
 
-test('简介前使用Markdown分隔线，已有简介或分隔线时不重复',t=>{
+test('简介前使用Markdown分隔线，已有简介、引用块简介或分隔线时不重复',t=>{
   for(const theme of ['晴蓝手记','雾蓝气泡','薄荷气泡','青山绿水']){
     const rule=convert(article(t,'正文。\n\n---'),{theme,authorBio:false,brandIntro:false}).html.replace(/^.*?<\/p>/s,'').replace(/<\/section>\s*$/,'').trim();
-    for(const ending of ['',bio,bio.replace('梦哥','**梦哥**'),'---\n\n'+bio,'---']){
+    for(const ending of ['',bio,bio.replace('梦哥','**梦哥**'),'---\n\n'+bio,`> ${bio}`,`---\n\n> ${bio}`,'---']){
       const body='正文。\n\n'+ending,file=article(t,body);
       const html=convert(file,{theme,brandIntro:false}).html;
       assert.equal(text(html).split(bio).length-1,1);

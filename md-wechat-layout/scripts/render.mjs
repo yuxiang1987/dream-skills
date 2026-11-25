@@ -41,8 +41,11 @@ export function normalizeObsidian(source, warnings = []) {
   });
   source = source.replace(/^(\s*>\s*)\[!([^\]]+)\][+-]?\s*(.*)$/gm, (_, prefix, type, title) => `${prefix}**${title || type}**`);
   // Obsidian accepts closing bold punctuation immediately followed by Chinese.
-  // Add a separating space for markdown-it, outside protected code.
-  source = source.replace(/(\*\*[^*\n]+\*\*)(?=[\p{L}\p{N}])/gu, '$1 ');
+  // Match each valid bold pair first so adjacent "**A**、**B**" never pairs across "、".
+  source = source.replace(/\*\*(?!\s)(?:[^*\n]|\*(?!\*))+?(?<!\s)\*\*/gu, (match, offset, str) => {
+    const next = str.slice(offset + match.length);
+    return /^[\p{L}\p{N}]/u.test(next) ? `${match} ` : match;
+  });
   return source.replace(/\u0000CODE(\d+)\u0000/g, (_, i) => protectedParts[Number(i)]);
 }
 
@@ -87,16 +90,30 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     resolved.set(src, result); resolved.set(escape(src), result); return result;
   }
   // Pre-resolve every image so missing attachments cannot silently produce broken output.
-  const tokens = new MarkdownIt({ linkify: true }).parse(source, {});
-  // 已有独立简介段落时，只在导出副本补Markdown分隔线。
-  const lastInline = tokens.at(-2);
-  if (authorBio && tokens.at(-3)?.type === 'paragraph_open' && tokens.at(-3).level === 0
-      && lastInline?.type === 'inline'
-      && lastInline.children.map(token => token.content).join('').trim() === authorBioText
-      && tokens.at(-4)?.type !== 'hr') {
-    const lines = source.split('\n');
-    lines.splice(tokens.at(-3).map[0], 0, '---', '');
-    source = lines.join('\n');
+  let tokens = new MarkdownIt({ linkify: true }).parse(source, {});
+  // 源稿末尾已有同一句简介（普通段落、加粗或 > 引用块）时，剥离后统一按「上方横线 + 纯加粗段落」输出，避免变成引用卡片或重复横线。
+  if (authorBio) {
+    const normBio = s => s.replace(/\s+/g, '');
+    const targetBio = normBio(authorBioText);
+    let bioStartLine = null;
+    let prevToken = null;
+    if (tokens.at(-3)?.type === 'paragraph_open' && tokens.at(-3).level === 0
+        && tokens.at(-2)?.type === 'inline' && tokens.at(-1)?.type === 'paragraph_close'
+        && normBio(tokens.at(-2).children.map(t => t.content).join('')) === targetBio) {
+      bioStartLine = tokens.at(-3).map[0];
+      prevToken = tokens.at(-4);
+    } else if (tokens.at(-5)?.type === 'blockquote_open' && tokens.at(-5).level === 0
+        && tokens.at(-4)?.type === 'paragraph_open' && tokens.at(-3)?.type === 'inline'
+        && tokens.at(-2)?.type === 'paragraph_close' && tokens.at(-1)?.type === 'blockquote_close'
+        && normBio(tokens.at(-3).children.map(t => t.content).join('')) === targetBio) {
+      bioStartLine = tokens.at(-5).map[0];
+      prevToken = tokens.at(-6);
+    }
+    if (bioStartLine !== null) {
+      const cutLine = (prevToken?.type === 'hr' && prevToken.level === 0) ? prevToken.map[0] : bioStartLine;
+      source = source.split('\n').slice(0, cutLine).join('\n');
+      tokens = new MarkdownIt({ linkify: true }).parse(source, {});
+    }
   }
   function visit(items) { for (const token of items) { if (token.type === 'image') image(token.attrGet('src')); if (token.children) visit(token.children); } }
   visit(tokens);
@@ -154,11 +171,12 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     // body copy; only an explicit Markdown blockquote should become a card.
     if (/\$\$|\$[^\n$]+\$/.test(source)) warnings.push('数学公式未转换为图片，请检查预览。');
     if (selected.id === 'mint-soda') html = html.replace(/<(th|td) style="([^"]*)">/g, '<$1 style="$2min-width:5.5em;">');
-    // 个人简介仅加在导出末尾，保留用户原文；已有同一句结尾时不重复。
+    // 个人简介仅加在导出末尾，默认上方带分隔横线并整句加粗（不套引用卡片）；源稿已有同一句结尾时不重复。
     if (authorBio && !html.replace(/<[^>]*>/g, '').trim().endsWith(authorBioText)) {
       const separator = base.hrHtml || `<hr style="${escape(base.hr)}"/>`;
       const hasSeparator = html.replace(/<\/section>\s*$/, '').trimEnd().endsWith(separator);
-      const closing = `${hasSeparator ? '' : separator}<p style="${custom.p}margin:0;">${escape(authorBioText)}</p>`;
+      const strongStyle = custom.strong || base.strong;
+      const closing = `${hasSeparator ? '' : separator}<p style="${custom.p}margin:0;"><strong style="${strongStyle}">${escape(authorBioText)}</strong></p>`;
       html = html.replace(/<\/section>\s*$/, closing + '</section>');
     }
     if (mistBlue) {
@@ -184,7 +202,8 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
       if (!match) throw new Error('自定义 SVG 片头内容无效，需包含完整的 <svg>...</svg>');
       const svgMarkup = match[0];
       if (!html.includes('<svg ')) {
-        const opening = `<section style="margin:0 0 24px;padding:0;text-align:center;">${svgMarkup}</section>`;
+        const introFrameStyle = 'margin:0 0 24px;padding:8px 10px;background-color:#ffffff;border:1.5px solid #7ec8ff;border-radius:12px;box-sizing:border-box;box-shadow:0 4px 14px rgba(70,183,255,0.10);text-align:center;';
+        const opening = `<section style="${introFrameStyle}">${svgMarkup}</section>`;
         html = html.replace(/^<section\b[^>]*>/, tag => tag + opening);
       }
       warnings.push('已启用自定义 SVG+SMIL 片头；粘贴后检查微信公众号保存重载与手机端动画播放。');

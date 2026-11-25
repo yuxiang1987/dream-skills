@@ -76,13 +76,14 @@ test('CLI交付独立片头，下载入口位于复制正文之外',t=>{
   assert.ok(!html.includes('单独下载片头 GIF'));
 });
 
-test('传入自定义 --intro-svg 时内嵌 SVG+SMIL 片头并替换默认 GIF',t=>{
+test('传入自定义 --intro-svg 时内嵌带蓝色圆角边框的 SVG+SMIL 片头并替换默认 GIF',t=>{
   const input=article(t,'# 标题\n\n正文内容。');
   const svgFile=path.join(path.dirname(input),'custom-intro.svg');
   const sampleSvg='<svg xmlns="http://www.w3.org/2000/svg" width="1246" height="220" viewBox="0 0 1246 220" aria-label="定制SVG片头"><rect x="0" y="0" width="100" height="50" fill="#1E6FFF"/></svg>';
   fs.writeFileSync(svgFile,sampleSvg,'utf8');
   const result=convert(input,{introSvg:svgFile});
   assert.ok(result.html.includes('aria-label="定制SVG片头"'));
+  assert.match(result.html,/<section style="[^"]*border:1\.5px solid #7ec8ff;border-radius:12px;[^"]*"><svg\b/);
   assert.ok(!result.html.includes('data:image/gif;base64,'));
   assert.ok(result.warnings.some(w=>w.includes('自定义 SVG+SMIL 片头')));
   const cli=fileURLToPath(new URL('../scripts/render.mjs',import.meta.url));

@@ -73,6 +73,7 @@ test('晴蓝手记保留内容和源文，编号分块，只有显式高亮铺�
   assert.match(html, /<mark[^>]*background-color:#e8f7ff[^>]*font-size:inherit[^>]*>跨行也保留的浅蓝重点<\/mark>/);
   assert.match(html, /<p[^>]*font-size:15px;line-height:25.5px/);
   assert.match(html, /<blockquote/);
+  assert.match(html, /<hr[^>]*background-image:linear-gradient\(90deg,rgba\(70,183,255,0\),#8dd6ff 22%,#46b7ff 50%,#8dd6ff 78%,rgba\(70,183,255,0\)\)/);
   assert.match(html, /<table/);
   assert.match(html, /const/);
   assert.doesNotMatch(html, /✧|data-line=|<style|<script|#ddf7cb|#1e6b5a|#2fbf9b/);
