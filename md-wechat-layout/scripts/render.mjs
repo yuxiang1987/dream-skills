@@ -171,6 +171,15 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     // body copy; only an explicit Markdown blockquote should become a card.
     if (/\$\$|\$[^\n$]+\$/.test(source)) warnings.push('数学公式未转换为图片，请检查预览。');
     if (selected.id === 'mint-soda') html = html.replace(/<(th|td) style="([^"]*)">/g, '<$1 style="$2min-width:5.5em;">');
+    // 正文中的英文单词/技术标识符（如 WorkBuddy、huashu-design、_design）自动加粗，跳过代码块、标题、已有 strong、URL 与 HTML 实体。
+    const inlineStrongOpen = `<strong style="${escape(custom.strong || base.strong)}">`;
+    html = html.replace(
+      /<svg\b[\s\S]*?<\/svg>|<code\b[\s\S]*?<\/code>|<h[1-6]\b[\s\S]*?<\/h[1-6]>|<strong\b[\s\S]*?<\/strong>|<section\b[^>]*font-weight:700[^>]*>[\s\S]*?<\/section>|<p\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/p>|<a\b[\s\S]*?<\/a>|<[^>]+>|https?:\/\/[^\s<]+|(&[a-zA-Z0-9#]+;)|(_?[A-Za-z][A-Za-z0-9_.-]*(?: +[A-Za-z][A-Za-z0-9_.-]*)*)/g,
+      (match, _entity, eng) => {
+        if (!eng || (eng.match(/[A-Za-z]/g) || []).length < 2) return match;
+        return `${inlineStrongOpen}${eng}</strong>`;
+      }
+    );
     // 个人简介仅加在导出末尾，默认上方带分隔横线并整句加粗（不套引用卡片）；源稿已有同一句结尾时不重复。
     if (authorBio && !html.replace(/<[^>]*>/g, '').trim().endsWith(authorBioText)) {
       const separator = base.hrHtml || `<hr style="${escape(base.hr)}"/>`;
