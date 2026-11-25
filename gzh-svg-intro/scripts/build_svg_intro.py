@@ -317,12 +317,19 @@ def smil_stroke_draw(
     dur: str = DUR,
     reverse: bool = False,
     spline: str = "0.23 1 0.32 1",
+    erase_start: float | None = None,
+    erase_end: float | None = None,
 ) -> str:
-    """生成 stroke-dashoffset 描边生长动画，需配合元素上的 stroke-dasharray 使用。"""
+    """生成 stroke-dashoffset 描边生长动画，可选后半程反向擦除实现转场退场。"""
     v0 = 0 if reverse else length
     v1 = length if reverse else 0
-    kt = f"0;{t_start:.3f};{t_end:.3f};1"
-    vals = f"{v0:.1f};{v0:.1f};{v1:.1f};{v1:.1f}"
+    if erase_start is not None and erase_end is not None:
+        v2 = -length if not reverse else length
+        kt = f"0;{t_start:.3f};{t_end:.3f};{erase_start:.3f};{erase_end:.3f};1"
+        vals = f"{v0:.1f};{v0:.1f};{v1:.1f};{v1:.1f};{v2:.1f};{v2:.1f}"
+    else:
+        kt = f"0;{t_start:.3f};{t_end:.3f};1"
+        vals = f"{v0:.1f};{v0:.1f};{v1:.1f};{v1:.1f}"
     return smil_attr("stroke-dashoffset", vals, kt, spline=spline, dur=dur)
 
 
@@ -429,6 +436,78 @@ def check_badge(cx: float, cy: float, r: float, t_appear: float, dur: str = DUR)
         f'fill="none" stroke="#FFFFFF" stroke-width="{2.4 * s:.1f}" stroke-linecap="round" stroke-linejoin="round"/>'
     )
     return scale_around(cx, cy, "0;0;1.28;1;1", f"0;{t1};{t2};{t3};1", inner, dur=dur)
+
+
+def launch_recoil(
+    cx: float,
+    cy: float,
+    inner: str,
+    t_shake: float = 0.68,
+    t_recoil: float = 0.74,
+    t_launch: float = 0.85,
+    dx: float = 980.0,
+    dy: float = 0.0,
+    recoil_dx: float = -26.0,
+    dur: str = DUR,
+) -> str:
+    """三段式物理发射：高频微震 -> 后坐挤压蓄力 -> 加速拉伸冲出（参考摸鱼小李火箭发射）。"""
+    ts = [t_shake, t_shake + 0.01, t_shake + 0.02, t_shake + 0.03, t_shake + 0.04, t_recoil, t_launch]
+    tr_vals = f"0 0;0 0;0 -1.6;0 1.6;0 -1.6;0 0;{recoil_dx:.1f} 0;{dx:.1f} {dy:.1f};{dx:.1f} {dy:.1f}"
+    tr_kt = f"0;{ts[0]:.3f};{ts[1]:.3f};{ts[2]:.3f};{ts[3]:.3f};{ts[4]:.3f};{ts[5]:.3f};{ts[6]:.3f};1"
+    tr_sp = "0.45 0 0.55 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0.23 1 0.32 1;0.55 0 0.85 0.45;0.45 0 0.55 1"
+    sc_vals = "1 1;1 1;.94 1.07;1.1 .93;1.1 .93"
+    sc_kt = f"0;{ts[4]:.3f};{ts[5]:.3f};{ts[6]:.3f};1"
+    return (
+        f'<g><animateTransform attributeName="transform" type="translate" values="{tr_vals}" '
+        f'keyTimes="{tr_kt}" dur="{dur}" repeatCount="indefinite" calcMode="spline" keySplines="{tr_sp}"/>'
+        f'<g transform="translate({cx} {cy})"><g>'
+        f'{smil_transform("scale", sc_vals, sc_kt, spline="0.23 1 0.32 1", dur=dur)}'
+        f'<g transform="translate({-cx} {-cy})">{inner}</g></g></g></g>'
+    )
+
+
+def particle_fountain(
+    ox: float,
+    oy: float,
+    particles: list[tuple[str, float, float, float]],
+    t_start: float = 0.28,
+    step: float = 0.015,
+    span: float = 0.10,
+    dur: str = DUR,
+) -> str:
+    """多段抛物线粒子喷泉：particles 每项为 (inner_svg, dx, dy_peak, dy_end)。"""
+    out: list[str] = []
+    for idx, (inner, dx, dy_peak, dy_end) in enumerate(particles):
+        t0 = t_start + idx * step
+        t1 = t0 + span * 0.5
+        t2 = min(0.87, t0 + span)
+        kt = f"0;{t0:.3f};{t1:.3f};{t2:.3f};1"
+        vals = f"0 0;0 0;{dx * 0.55:.1f} {dy_peak:.1f};{dx:.1f} {dy_end:.1f};{dx:.1f} {dy_end:.1f}"
+        op = smil_opacity("0;0;1;1;0;0", f"0;{t0:.3f};{t0 + 0.01:.3f};{max(t2, 0.84):.3f};0.88;1", dur=dur)
+        out.append(
+            f'<g transform="translate({ox} {oy})" opacity="0">{op}'
+            f'<g>{smil_transform("translate", vals, kt, spline="0.23 1 0.32 1", dur=dur)}{inner}</g></g>'
+        )
+    return "".join(out)
+
+
+def stagger_bounce(
+    items: list[str],
+    t_start: float = 0.62,
+    step: float = 0.025,
+    jump: float = -6.4,
+    dur: str = DUR,
+) -> str:
+    """队列错峰波浪弹跳：适合多角色/多图标依次轻跳收尾。"""
+    out: list[str] = []
+    for idx, inner in enumerate(items):
+        t0 = t_start + idx * step
+        t1 = t0 + 0.024
+        t2 = min(0.87, t0 + 0.05)
+        kt = f"0;{t0:.3f};{t1:.3f};{t2:.3f};1"
+        vals = f"0 0;0 0;0 {jump:.1f};0 0;0 0"
+        out.append(f'<g>{smil_transform("translate", vals, kt, spline="0.23 1 0.32 1", dur=dur)}{inner}</g>')
+    return "".join(out)
 
 
 def load_brand_opener(dur: str = DUR) -> str:

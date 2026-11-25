@@ -55,12 +55,19 @@ class BuildSvgIntroTest(unittest.TestCase):
         self.assertIn('type="skewY"', v3d)
 
     def test_new_smil_primitives(self):
-        stroke_anim = kit.smil_stroke_draw(120, 0.25, 0.45, dur="6s")
+        stroke_anim = kit.smil_stroke_draw(120, 0.25, 0.45, dur="6s", erase_start=0.60, erase_end=0.70)
         self.assertIn('attributeName="stroke-dashoffset"', stroke_anim)
+        self.assertIn("-120.0", stroke_anim)
         self.assertIn('dur="6s"', stroke_anim)
         rot = kit.rotate_around(100, 100, "0;45;0", "0;.5;1", "<rect/>", dur="5s")
         self.assertIn('type="rotate"', rot)
         self.assertIn('dur="5s"', rot)
+        recoil = kit.launch_recoil(300, 110, "<rect/>", dur="5.5s")
+        self.assertIn("0.55 0 0.85 0.45", recoil)
+        fountain = kit.particle_fountain(300, 110, [("<circle r='3'/>", 120, -40, 20)], dur="5s")
+        self.assertIn('dur="5s"', fountain)
+        bounce = kit.stagger_bounce(["<circle r='5'/>", "<circle r='5'/>"], dur="5s")
+        self.assertIn("-6.4", bounce)
 
     def test_cli_generates_svg_and_preview_html(self):
         with tempfile.TemporaryDirectory() as tmp:
