@@ -25,7 +25,7 @@ test('完整复制实际携带正文中的内联滚动样式与全部提示词',
   const html=convert(article(t,sample)).html;
   assert.match(html,/max-height:320px;overflow:auto;box-sizing:border-box/);
   const copied=await copy(html);assert.equal(copied.payload,html);assert.match(copied.payload,/data:image\/gif;base64,/);assert.ok(copied.payload.includes('我是梦哥，十年程序员，爱折腾 AI。分享实用 AI 工具、有趣玩法和实操心得，一起把想法做出来。'));assert.match(copied.status,/已复制富文本/);
-  assert.match(copied.payload,/<hr\b[^>]*linear-gradient[^>]*>\s*<p[^>]*><strong[^>]*>我是梦哥/);
+  assert.match(copied.payload,/<hr\b[^>]*radial-gradient[^>]*>\s*<p[^>]*><strong[^>]*>我是梦哥/);
   assert.match(copied.payload,/text-align:justify;text-align-last:left;/);
   assert.match(copied.payload,/<p[^>]*font-size:15px;line-height:25.5px/);
   assert.equal((copied.payload.match(/中文提示词/g)||[]).length,80);
@@ -33,7 +33,7 @@ test('完整复制实际携带正文中的内联滚动样式与全部提示词',
 test('备用复制不解除限高，也不裁掉长代码内容',async t=>{
   const html=convert(article(t,sample)).html;
   const copied=await copy(html,true);assert.equal(copied.command,'copy');assert.equal(copied.payload,html);assert.match(copied.payload,/data:image\/gif;base64,/);assert.ok(copied.payload.includes('我是梦哥，十年程序员，爱折腾 AI。分享实用 AI 工具、有趣玩法和实操心得，一起把想法做出来。'));
-  assert.match(copied.payload,/<hr\b[^>]*linear-gradient[^>]*>\s*<p[^>]*><strong[^>]*>我是梦哥/);
+  assert.match(copied.payload,/<hr\b[^>]*radial-gradient[^>]*>\s*<p[^>]*><strong[^>]*>我是梦哥/);
   assert.match(copied.payload,/text-align:justify;text-align-last:left;/);
   assert.match(copied.payload,/<p[^>]*font-size:15px;line-height:25.5px/);
   assert.doesNotMatch(preview(html,'预览',[]),/max-height:none|body\.copying/);

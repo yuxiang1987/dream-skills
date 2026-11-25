@@ -28,7 +28,7 @@ export const blueJournal = {
     galleryImg: 'display:inline-block;vertical-align:middle;width:auto;height:auto;max-width:100%;margin:0 auto;',
     blockquote: `margin:24px 10px;padding:12px 16px;background-color:#f3faff;border-left:3px solid #8dd6ff;border-radius:0;color:#4c6072;`,
     bqP: 'margin:0;text-indent:0;text-align:left;',
-    hr: 'border:none;height:2px;border-radius:2px;background-color:#46b7ff;background-image:linear-gradient(90deg,rgba(70,183,255,0),#8dd6ff 22%,#46b7ff 50%,#8dd6ff 78%,rgba(70,183,255,0));margin:32px 10px;',
+    hr: 'border:none;height:5px;background-color:transparent;background-image:radial-gradient(46% 40% at 50% 50%,#ffffff 0%,#6bc8ff 24%,#2f9bff 60%,rgba(47,155,255,0) 100%),radial-gradient(50% 95% at 50% 50%,rgba(70,183,255,0.32) 0%,rgba(141,214,255,0.10) 60%,rgba(141,214,255,0) 100%);margin:30px 10px;',
     th: 'border:1px solid #cfeaff;padding:8px 12px;background-color:#ecf8ff;font-weight:700;text-align:left;',
     td: 'border:1px solid #cfeaff;padding:8px 12px;text-align:left;',
     pre: 'background-color:#ffffff;border:1px solid #cfe8f7;border-radius:10px;margin:1.2em 8px;overflow:hidden;',
