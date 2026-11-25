@@ -797,6 +797,35 @@ function createMd(theme, opts) {
     const labelStyle =
       styles.preLabel ||
       `color:${chrome.label};font-size:12px;line-height:11px;margin-left:10px;vertical-align:top;`
+    const rawInfo = token?.info ? token.info.trim() : lang
+    const promptMatch = styles.promptFrame && /^(?:prompt|提示词)(?:\s+(.+))?$/i.exec(rawInfo)
+    if (promptMatch) {
+      const promptTitle = (promptMatch[1] || '').trim() || '提示词'
+      const pCodeStyle = styles.promptCode || codeStyle
+      const pEmptyStyle = styles.promptEmptyLine || pCodeStyle
+      const pLinesHtml = splitCodeLines(inner)
+        .map((line) => {
+          const lineStyle = line === '&nbsp;' ? pEmptyStyle : pCodeStyle
+          return `<code style="${escapeHtmlAttr(`${lineStyle}display:block;`)}">${line}</code>`
+        })
+        .join('')
+      const hintHtml = styles.promptScrollHint
+        ? `<span style="${escapeHtmlAttr(styles.promptHint)}">${esc(styles.promptScrollHint)}</span>`
+        : ''
+      return (
+        `<section${dl(token)} style="${escapeHtmlAttr(styles.promptFrame)}">` +
+        `<section style="${escapeHtmlAttr(styles.promptHeader)}">` +
+        `<section style="display:flex;align-items:center;min-width:0;">` +
+        `<span style="${escapeHtmlAttr(styles.promptBadge)}">PROMPT</span>` +
+        `<span style="${escapeHtmlAttr(styles.promptTitle)}">${esc(promptTitle)}</span>` +
+        `</section>` +
+        hintHtml +
+        `</section>` +
+        `<section style="${escapeHtmlAttr(styles.promptBody || bodyStyle)}">${pLinesHtml}</section>` +
+        `</section>`
+      )
+    }
+
     // 逐行块级 <code>：不输出 <pre> 与裸 \n，公众号粘贴不会拆行/丢内容/错乱
     const linesHtml = splitCodeLines(inner)
       .map((line) => `<code style="${escapeHtmlAttr(`${codeStyle}display:block;`)}">${line}</code>`)

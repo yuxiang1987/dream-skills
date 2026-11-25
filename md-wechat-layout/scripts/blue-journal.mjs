@@ -34,5 +34,13 @@ export const blueJournal = {
     pre: 'background-color:#ffffff;border:1px solid #cfe8f7;border-radius:10px;margin:1.2em 8px;overflow:hidden;',
     preHeader: 'padding:10px 14px;background-color:#e1f3ff;border-bottom:1px solid #cfe8f7;font-size:12px;line-height:20px;',
     preLabel: 'font-family:Menlo,Consolas,monospace;color:#4c87b3;font-size:12px;line-height:20px;margin-left:10px;vertical-align:middle;',
+    promptFrame: 'background-color:#f8fbff;border:2px solid #5cb8ff;border-radius:4px;box-shadow:4px 4px 0 #d6ecff;margin:1.4em 8px;overflow:hidden;',
+    promptHeader: 'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 14px;background-color:#e6f4ff;border-bottom:2px solid #9ad4ff;box-shadow:inset 0 1px 0 #ffffff;line-height:20px;',
+    promptBadge: "display:inline-block;background-color:#1e6fff;color:#ffffff;font-family:Menlo,Consolas,'Courier New',monospace;font-size:11px;font-weight:700;line-height:16px;letter-spacing:1.2px;padding:2px 8px;border:1.5px solid #0d3c99;border-radius:2px;box-shadow:inset 1.5px 1.5px 0 #6bb0ff,inset -1.5px -1.5px 0 #134ec4,2px 2px 0 #8dd6ff;margin-right:10px;flex-shrink:0;",
+    promptTitle: 'font-size:13.5px;font-weight:700;color:#163a66;line-height:20px;letter-spacing:0.5px;',
+    promptHint: 'display:inline-block;font-size:11.5px;font-weight:600;line-height:18px;color:#3d73ad;background-color:#f2f9ff;border:1px solid #a8d8ff;border-radius:2px;box-shadow:1.5px 1.5px 0 #cfeaff;padding:1px 7px;white-space:nowrap;flex-shrink:0;',
+    promptBody: 'background-color:#fbfdff;padding:14px 16px;margin:0;overflow-x:auto;',
+    promptCode: `font-family:${WECHAT_FONT},Menlo,Consolas,monospace;font-size:13px;line-height:1.78;text-align:left;color:#243b53;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;`,
+    promptEmptyLine: `font-family:${WECHAT_FONT},Menlo,Consolas,monospace;font-size:10px;line-height:10px;text-align:left;color:#243b53;white-space:pre-wrap;`,
   }),
 };

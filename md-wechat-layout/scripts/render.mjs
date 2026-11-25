@@ -162,9 +162,16 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     custom.preBody = 'background-color:#ffffff;padding:14px 16px;margin:0;overflow-x:auto;';
     custom.preCode = 'color:#34413c;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;';
     if (selected.id === 'blue-journal') {
-      for (const key of ['pre', 'preHeader', 'preLabel']) custom[key] = base[key];
+      for (const key of ['pre', 'preHeader', 'preLabel', 'promptFrame', 'promptHeader', 'promptBadge', 'promptTitle', 'promptHint', 'promptBody', 'promptCode', 'promptEmptyLine']) {
+        if (base[key]) custom[key] = base[key];
+      }
+      custom.promptScrollHint = codeMaxHeight > 0 ? '上下滑动 ↕' : '';
     }
-    if (codeMaxHeight > 0) custom.preBody += `max-height:${codeMaxHeight}px;overflow:auto;box-sizing:border-box;-webkit-overflow-scrolling:touch;`;
+    if (codeMaxHeight > 0) {
+      const scrollCss = `max-height:${codeMaxHeight}px;overflow:auto;box-sizing:border-box;-webkit-overflow-scrolling:touch;`;
+      custom.preBody += scrollCss;
+      if (custom.promptBody) custom.promptBody += scrollCss;
+    }
     const renderTheme = { ...selected, codeTheme: 'light', codeChrome: 'mac' };
     let html = stripPreviewMeta(renderMarkdown(source, renderTheme, { fontSize, linkFootnotes, galleryMode: 'stack', macCode: true, plainInlineText: true, readingTypography: true, avoidOrphans, custom }));
     // Keep Markdown emphasis inline. A fully bold paragraph is still ordinary
@@ -174,7 +181,7 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     // 正文中的英文单词/技术标识符（如 WorkBuddy、huashu-design、_design）自动加粗，跳过代码块、标题、已有 strong、URL 与 HTML 实体。
     const inlineStrongOpen = `<strong style="${escape(custom.strong || base.strong)}">`;
     html = html.replace(
-      /<svg\b[\s\S]*?<\/svg>|<code\b[\s\S]*?<\/code>|<h[1-6]\b[\s\S]*?<\/h[1-6]>|<strong\b[\s\S]*?<\/strong>|<section\b[^>]*font-weight:700[^>]*>[\s\S]*?<\/section>|<p\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/p>|<a\b[\s\S]*?<\/a>|<[^>]+>|https?:\/\/[^\s<]+|(&[a-zA-Z0-9#]+;)|(_?[A-Za-z][A-Za-z0-9_.-]*(?: +[A-Za-z][A-Za-z0-9_.-]*)*)/g,
+      /<svg\b[\s\S]*?<\/svg>|<code\b[\s\S]*?<\/code>|<h[1-6]\b[\s\S]*?<\/h[1-6]>|<strong\b[\s\S]*?<\/strong>|<section\b[^>]*font-weight:700[^>]*>[\s\S]*?<\/section>|<span\b[^>]*font-weight:[67]00[^>]*>[\s\S]*?<\/span>|<span\b[^>]*font-family:[^"]*monospace[^>]*>[\s\S]*?<\/span>|<p\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/p>|<a\b[\s\S]*?<\/a>|<[^>]+>|https?:\/\/[^\s<]+|(&[a-zA-Z0-9#]+;)|(_?[A-Za-z][A-Za-z0-9_.-]*(?: +[A-Za-z][A-Za-z0-9_.-]*)*)/g,
       (match, _entity, eng) => {
         if (!eng || (eng.match(/[A-Za-z]/g) || []).length < 2) return match;
         return `${inlineStrongOpen}${eng}</strong>`;

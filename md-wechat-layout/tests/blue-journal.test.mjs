@@ -42,20 +42,26 @@ test('晴蓝手记恢复自适应图片，用对称固定内边距，保留原�
   assert.equal((mixed.match(/width:100%;padding:0 32px;box-sizing:border-box/g) || []).length, 1);
 });
 
-test('晴蓝手记提示词和代码窗口采用浅蓝标题栏，其他主题保留浅灰栏', t => {
-  const input = article(t, '```提示词\n拿出全部本事。\n```\n\n```js\nconst value = 1;\n```');
+test('晴蓝手记提示词采用蓝色像素风PROMPT卡片，普通代码窗口保留浅蓝Mac标题栏，其他主题保留浅灰栏', t => {
+  const input = article(t, '```提示词\n拿出全部本事。\n```\n\n```prompt 《片头》提示词\n第一段提示词。\n\n第二段提示词。\n```\n\n```js\nconst value = 1;\n```');
   const html = convert(input, { theme: '晴蓝手记' }).html;
-  assert.equal((html.match(/background-color:#e1f3ff/g) || []).length, 2);
-  assert.match(html, /color:#4c87b3[^>]*>提示词<\/span>/);
-  assert.match(html, /background-color:#ffffff;padding:14px 16px/);
+  assert.equal((html.match(/>PROMPT<\/span>/g) || []).length, 2);
+  assert.match(html, /background-color:#1e6fff;color:#ffffff;[^>]*>PROMPT<\/span><span[^>]*>提示词<\/span>/);
+  assert.match(html, /background-color:#1e6fff;color:#ffffff;[^>]*>PROMPT<\/span><span[^>]*>《片头》提示词<\/span>/);
+  assert.equal((html.match(/>上下滑动 ↕<\/span>/g) || []).length, 2);
+  assert.match(html, /border:2px solid #5cb8ff;border-radius:4px;box-shadow:4px 4px 0 #d6ecff;/);
+  assert.equal((html.match(/background-color:#e1f3ff/g) || []).length, 1);
+  assert.match(html, /color:#4c87b3[^>]*>js<\/span>/);
   assert.match(html, /background-color:#ff5f56/);
   assert.match(html, /拿出全部本事。/);
   assert.match(html, /const/);
   assert.doesNotMatch(html, /background-color:#f4f6f5/);
+  const expanded = convert(input, { theme: '晴蓝手记', codeMaxHeight: 0 }).html;
+  assert.doesNotMatch(expanded, /上下滑动 ↕/);
   for (const theme of ['雾蓝气泡', '薄荷气泡', '青山绿水']) {
     const legacy = convert(input, { theme }).html;
     assert.match(legacy, /background-color:#f4f6f5/);
-    assert.doesNotMatch(legacy, /background-color:#e1f3ff/);
+    assert.doesNotMatch(legacy, /background-color:#e1f3ff|>PROMPT<\/span>/);
   }
 });
 
