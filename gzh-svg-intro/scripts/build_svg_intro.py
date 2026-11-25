@@ -510,6 +510,45 @@ def stagger_bounce(
     return "".join(out)
 
 
+def ripple_pulse(
+    cx: float,
+    cy: float,
+    r_start: float = 8.0,
+    r_end: float = 34.0,
+    t_hit: float = 0.40,
+    span: float = 0.14,
+    color: str = "#10B981",
+    dur: str = DUR,
+) -> str:
+    """节点命中/落地瞬间的同心圆波纹扩散（animate:r + opacity）。"""
+    t1 = min(0.88, t_hit + span)
+    kt = f"0;{t_hit:.3f};{t1:.3f};1"
+    r_anim = smil_attr("r", f"{r_start:.1f};{r_start:.1f};{r_end:.1f};{r_end:.1f}", kt, spline="0.23 1 0.32 1", dur=dur)
+    op_anim = smil_opacity("0;0;.65;0;0", f"0;{max(0.0, t_hit - 0.005):.3f};{t_hit:.3f};{t1:.3f};1", dur=dur)
+    return f'<circle cx="{cx}" cy="{cy}" r="{r_start:.1f}" fill="none" stroke="{color}" stroke-width="2" opacity="0">{r_anim}{op_anim}</circle>'
+
+
+def smil_motion(
+    path_d: str,
+    inner: str,
+    t_start: float = 0.28,
+    t_end: float = 0.56,
+    rotate: str = "auto",
+    dur: str = DUR,
+) -> str:
+    """沿任意 SVG 贝塞尔路径做 <animateMotion> 轨迹运动（保持循环同步）。"""
+    kt = f"0;{t_start:.3f};{t_end:.3f};1"
+    kp = "0;0;1;1"
+    sp = "0.45 0 0.55 1;0.23 1 0.32 1;0.45 0 0.55 1"
+    op = smil_opacity("0;0;1;1;0;0", f"0;{t_start:.3f};{t_start + 0.015:.3f};{t_end:.3f};{min(0.90, t_end + 0.02):.3f};1", dur=dur)
+    return (
+        f'<g opacity="0">{op}'
+        f'<animateMotion path="{path_d}" keyPoints="{kp}" keyTimes="{kt}" '
+        f'dur="{dur}" repeatCount="indefinite" calcMode="spline" keySplines="{sp}" rotate="{rotate}"/>'
+        f'{inner}</g>'
+    )
+
+
 def load_brand_opener(dur: str = DUR) -> str:
     """加载预烘焙的「像素梦哥 + 16 组点阵字坍缩粒子」固定母版片段，支持同步主周期 dur。"""
     frag = OPENER_ASSET.read_text(encoding="utf-8")

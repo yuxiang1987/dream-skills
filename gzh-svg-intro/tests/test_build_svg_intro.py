@@ -68,6 +68,10 @@ class BuildSvgIntroTest(unittest.TestCase):
         self.assertIn('dur="5s"', fountain)
         bounce = kit.stagger_bounce(["<circle r='5'/>", "<circle r='5'/>"], dur="5s")
         self.assertIn("-6.4", bounce)
+        ripple = kit.ripple_pulse(500, 110, dur="6s")
+        self.assertIn('attributeName="r"', ripple)
+        motion = kit.smil_motion("M300,110 C400,50 600,160 800,110", "<circle r='5'/>", dur="6s")
+        self.assertIn("<animateMotion ", motion)
 
     def test_cli_generates_svg_and_preview_html(self):
         with tempfile.TemporaryDirectory() as tmp:
