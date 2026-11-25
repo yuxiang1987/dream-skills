@@ -73,6 +73,25 @@ class BuildSvgIntroTest(unittest.TestCase):
         motion = kit.smil_motion("M300,110 C400,50 600,160 800,110", "<circle r='5'/>", dur="6s")
         self.assertIn("<animateMotion ", motion)
 
+    def test_gsap_inspired_primitives(self):
+        chars = self.fe.chars("梦哥AI", 22, 300, 110, "#1E293B")
+        self.assertEqual(len(chars), 4)
+        staggered = kit.split_text_stagger(chars, mode="rise", dur="6s")
+        self.assertEqual(staggered.count("<animateTransform"), 4)
+        morphed = kit.morph_d(
+            [
+                [(0, -20), (20, 0), (0, 20), (-20, 0)],
+                [(-18, -18), (18, -18), (18, 18), (-18, 18)],
+            ],
+            "0;.5;1",
+            "#1E6FFF",
+            dur="6s",
+        )
+        self.assertIn('attributeName="d"', morphed)
+        drop = kit.bounce_drop(400, 110, "<circle cx='400' cy='110' r='16'/>", dur="6s")
+        self.assertIn("0.55 0 0.85 0.45", drop)
+        self.assertIn("1.18 .84", drop)
+
     def test_cli_generates_svg_and_preview_html(self):
         with tempfile.TemporaryDirectory() as tmp:
             out_svg = Path(tmp) / "intro.svg"

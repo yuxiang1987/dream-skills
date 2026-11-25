@@ -256,6 +256,23 @@ class TrueTypeSVG:
             cx += self.adv[gid] * scale
         return f'<path d="{"".join(cmds)}" fill="{fill}"/>' if cmds else ""
 
+    def text_to_char_paths(
+        self, text: str, size: float, x: float, y: float, fill: str
+    ) -> list[tuple[str, float, float]]:
+        """逐字输出闭合 <path> 及其中心锚点 (path_tag, cx, cy)，用于 SplitText 错峰动效。"""
+        scale = size / self.upem
+        cx = x
+        cy = y - size * 0.36
+        out: list[tuple[str, float, float]] = []
+        for ch in text:
+            gid = self.cmap.get(ord(ch), 0)
+            adv_w = self.adv[gid] * scale
+            tag = self.text_to_path(ch, size, cx, y, fill)
+            if tag:
+                out.append((tag, round(cx + adv_w * 0.5, 1), round(cy, 1)))
+            cx += adv_w
+        return out
+
 
 class FontEngine:
     """Automatic Chinese TrueType font loader (supports Bold and Regular)."""
@@ -286,6 +303,12 @@ class FontEngine:
     def text(self, text: str, size: float, x: float, y: float, fill: str, bold: bool = True) -> str:
         font = self.bold_font if bold else self.reg_font
         return font.text_to_path(text, size, x, y, fill)
+
+    def chars(
+        self, text: str, size: float, x: float, y: float, fill: str, bold: bool = True
+    ) -> list[tuple[str, float, float]]:
+        font = self.bold_font if bold else self.reg_font
+        return font.text_to_char_paths(text, size, x, y, fill)
 
 
 # ─── SMIL 动画原语与常用物理反馈组件 ───
@@ -546,6 +569,103 @@ def smil_motion(
         f'<animateMotion path="{path_d}" keyPoints="{kp}" keyTimes="{kt}" '
         f'dur="{dur}" repeatCount="indefinite" calcMode="spline" keySplines="{sp}" rotate="{rotate}"/>'
         f'{inner}</g>'
+    )
+
+
+def split_text_stagger(
+    chars: list[tuple[str, float, float]],
+    t_start: float = 0.28,
+    step: float = 0.018,
+    mode: str = "pop",
+    dur: str = DUR,
+) -> str:
+    """GSAP SplitText 风格逐字错峰动画：支持 pop（过冲弹出）/ rise（上浮显影）/ wave（波浪轻跳）。"""
+    out: list[str] = []
+    for idx, (tag, cx, cy) in enumerate(chars):
+        t0 = min(0.82, t_start + idx * step)
+        t1 = min(0.85, t0 + 0.03)
+        t2 = min(0.88, t0 + 0.06)
+        if mode == "rise":
+            op = smil_opacity("0;0;1;1", f"0;{t0:.3f};{t2:.3f};1", dur=dur)
+            tr = smil_transform("translate", "0 16;0 16;0 -3;0 0;0 0", f"0;{t0:.3f};{t1:.3f};{t2:.3f};1", dur=dur)
+            out.append(f'<g opacity="0">{op}<g>{tr}{tag}</g></g>')
+        elif mode == "wave":
+            tr = smil_transform("translate", "0 0;0 0;0 -8;0 0;0 0", f"0;{t0:.3f};{t1:.3f};{t2:.3f};1", dur=dur)
+            out.append(f'<g>{tr}{tag}</g>')
+        else:
+            op = smil_opacity("0;0;1;1", f"0;{t0:.3f};{t1:.3f};1", dur=dur)
+            sc = scale_around(cx, cy, "0;0;1.26;1;1", f"0;{t0:.3f};{t1:.3f};{t2:.3f};1", tag, dur=dur)
+            out.append(f'<g opacity="0">{op}{sc}</g>')
+    return "".join(out)
+
+
+def resample_ring(pts: list[tuple[float, float]], n: int = 24) -> list[tuple[float, float]]:
+    """将任意闭合顶点环等弧长重采样为固定 n 个点，用于纯 SMIL MorphSVG 变形。"""
+    import math
+
+    closed = list(pts) + [pts[0]]
+    dists = [0.0]
+    for i in range(len(pts)):
+        dx = closed[i + 1][0] - closed[i][0]
+        dy = closed[i + 1][1] - closed[i][1]
+        dists.append(dists[-1] + math.hypot(dx, dy))
+    total = dists[-1] or 1.0
+    out: list[tuple[float, float]] = []
+    seg = 0
+    for k in range(n):
+        target = (k / n) * total
+        while seg < len(pts) - 1 and dists[seg + 1] < target:
+            seg += 1
+        span = (dists[seg + 1] - dists[seg]) or 1.0
+        t = (target - dists[seg]) / span
+        x = closed[seg][0] + t * (closed[seg + 1][0] - closed[seg][0])
+        y = closed[seg][1] + t * (closed[seg + 1][1] - closed[seg][1])
+        out.append((round(x, 1), round(y, 1)))
+    return out
+
+
+def morph_d(
+    rings: list[list[tuple[float, float]]],
+    key_times: str,
+    fill: str,
+    stroke: str = "none",
+    stroke_width: float = 0,
+    n_points: int = 24,
+    spline: str = "0.45 0 0.55 1",
+    dur: str = DUR,
+) -> str:
+    """GSAP MorphSVG 风格纯 SMIL 路径变形：预对齐锚点数后通过 animate attributeName='d' 补间。"""
+    paths = []
+    for ring in rings:
+        sampled = resample_ring(ring, n_points)
+        d = "M" + " L".join(f"{x} {y}" for x, y in sampled) + " Z"
+        paths.append(d)
+    anim = smil_attr("d", ";".join(paths), key_times, spline=spline, dur=dur)
+    sw = f' stroke-width="{stroke_width}"' if stroke_width else ""
+    return f'<path d="{paths[0]}" fill="{fill}" stroke="{stroke}"{sw}>{anim}</path>'
+
+
+def bounce_drop(
+    cx: float,
+    cy: float,
+    inner: str,
+    y_from: float = -56.0,
+    t_start: float = 0.28,
+    dur: str = DUR,
+) -> str:
+    """GSAP CustomBounce 风格多段衰减落地弹跳（含触地挤压拉伸）。"""
+    ts = [t_start, t_start + 0.06, t_start + 0.085, t_start + 0.12, t_start + 0.145, t_start + 0.17]
+    tr_vals = f"0 {y_from:.1f};0 {y_from:.1f};0 0;0 -14;0 0;0 -4;0 0;0 0"
+    tr_kt = f"0;{ts[0]:.3f};{ts[1]:.3f};{ts[2]:.3f};{ts[3]:.3f};{ts[4]:.3f};{ts[5]:.3f};1"
+    tr_sp = ";".join(["0.45 0 0.55 1", "0.55 0 0.85 0.45", "0.23 1 0.32 1", "0.55 0 0.85 0.45", "0.23 1 0.32 1", "0.55 0 0.85 0.45", "0.45 0 0.55 1"])
+    sc_vals = "1 1;1 1;1.18 .84;.95 1.06;1.06 .95;1 1;1 1"
+    sc_kt = f"0;{ts[0]:.3f};{ts[1]:.3f};{ts[2]:.3f};{ts[3]:.3f};{ts[5]:.3f};1"
+    op = smil_opacity("0;0;1;1", f"0;{t_start:.3f};{t_start + 0.015:.3f};1", dur=dur)
+    return (
+        f'<g opacity="0">{op}'
+        f'<g><animateTransform attributeName="transform" type="translate" values="{tr_vals}" '
+        f'keyTimes="{tr_kt}" dur="{dur}" repeatCount="indefinite" calcMode="spline" keySplines="{tr_sp}"/>'
+        f'{scale_around(cx, cy, sc_vals, sc_kt, inner, dur=dur)}</g></g>'
     )
 
 

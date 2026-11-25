@@ -5,7 +5,7 @@ description: 为中文 AI 实测、教程和工具评测公众号文章定制纯
 
 # 公众号 SVG 片头动画
 
-先读 [references/storyboard-dna.md](references/storyboard-dna.md)，掌握 1246×220 画布规范、8 秒循环时间轴、点阵口号坍缩母版，以及从正文提取真实案例做物理因果反馈的设计法则。
+先读 [references/storyboard-dna.md](references/storyboard-dna.md) 与多流派灵感库 [references/style-catalog.md](references/style-catalog.md)，掌握 1246×220 画布规范、自适应循环时间轴、点阵口号坍缩母版，以及从正文提取真实案例做物理因果反馈的设计法则。
 
 ## 目标
 
@@ -35,7 +35,7 @@ description: 为中文 AI 实测、教程和工具评测公众号文章定制纯
      - **节点连线管道（`pipeline-nodes`，仅用于纯工作流）**：仅适合 Agent 工作流、Skill 流水线。左侧光源发出一颗光点，沿虚线贝塞尔路径依次点亮 3 个里程碑节点。
      - **调校舱插卡 + 伙伴点亮（`console-3act`）**：适合参数调优、多模型切换。左侧调校舱依次落入 3 张配置卡带，向右发射脉冲光球点亮伙伴机器人与 7 项进度柱。
      - **主机连弹微缩作品卡 + 结论/槽点仪表（`showcase-4card`）**：适合多案例模型横评。左侧复古主机连弹 4 张带卡内微动效的作品卡，右侧弹出惊喜与槽点仪表。
-     - **全新题材自定义舞台**：导入 `scripts/build_svg_intro.py` 的 `FontEngine`、`smil_opacity`、`smil_attr`、`smil_stroke_draw`、`smil_motion`、`smil_transform`、`scale_around`、`rotate_around`、`skew_around`、`launch_recoil`、`particle_fountain`、`stagger_bounce`、`ripple_pulse`、`perspective_grid`、`check_badge`、`wrap_stage`、`assemble_svg`、`save_intro_bundle`，编写贴合该文章独特道具的舞台（支持自定义 `dur` 如 `5s`/`6s`/`8s`）。
+     - **全新题材自定义舞台（推荐，“一文一景”）**：从 [references/style-catalog.md](references/style-catalog.md) 挑选贴合本文的流派（如瑞士网格动态排版、涂鸦刻度盘变形、暗调 2.5D UI、复古微缩布景、实景多维舞台），导入 `scripts/build_svg_intro.py` 的 `FontEngine`（含 `chars`）、`split_text_stagger`、`morph_d`、`bounce_drop`、`smil_opacity`、`smil_attr`、`smil_stroke_draw`、`smil_motion`、`smil_transform`、`scale_around`、`rotate_around`、`skew_around`、`launch_recoil`、`particle_fountain`、`stagger_bounce`、`ripple_pulse`、`perspective_grid`、`check_badge`、`wrap_stage`、`assemble_svg`、`save_intro_bundle` 手写定制舞台（支持自定义 `dur` 如 `5s`/`6s`/`8s`）。
 3. **文字转纯矢量 `<path>` 并生成 SVG 与预览页**：
    - 所有画面文字必须通过 `FontEngine.text(...)` 转成闭合矢量 `<path>`。
    - 调用 `save_intro_bundle(svg, out_svg, out_preview, title=...)` 自动执行合规校验（禁止 `<text>`/`<image>`/`<script>`/`<defs>`/`<style>`，强制 `calcMode="spline"` 与 `viewBox="0 0 1246 220"`）。
