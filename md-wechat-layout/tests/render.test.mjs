@@ -83,15 +83,15 @@ test('Obsidian语法转换保护代码，HTML脚本不执行', () => {
   assert.match(preview('<p>正文</p>', '<测试>', []), /&lt;测试&gt;/);
 });
 
-test('列表及段落行内代码统一文本尺寸，正文关键英文自动加粗，围栏代码与URL保持原样', () => {
+test('列表及段落行内代码统一文本尺寸，正文关键英文添加淡蓝下划虚线且不加粗，围栏代码与URL保持原样', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wechat-inline-'));
   const input = path.join(dir, '文章.md');
   fs.writeFileSync(input, '- **Schema：工作规范。**本文写进 `AGENTS.md`。\n\n用 WorkBuddy 搭配 `huashu-design` 输出 `_design` 目录，可用 `[[笔记名]]`，安装到[官网](https://example.com/path)。\n\n```js\nconst WorkBuddy = 1;\n```');
   const html = convert(input, { theme: '雾蓝气泡' }).html;
-  assert.doesNotMatch(html, /\*\*Schema|font-size:0.86em/);
+  assert.doesNotMatch(html, /\*\*Schema|font-size:0.86em|<strong[^>]*>WorkBuddy/);
   assert.match(html, /本文写进 AGENTS\.md。/);
   for (const term of ['WorkBuddy', 'huashu-design', '_design']) {
-    assert.match(html, new RegExp(`<strong[^>]*>${term}</strong>`));
+    assert.match(html, new RegExp(`<span style="[^"]*border-bottom:1\\.5px dashed #7ec8ff;[^"]*">${term}</span>`));
   }
   assert.match(html, /可用 \[\[笔记名\]\]，安装到官网。/);
   assert.doesNotMatch(html, /<a\b|<span[^>]*>AGENTS.md|&<strong/);

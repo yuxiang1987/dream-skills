@@ -49,7 +49,10 @@ test('晴蓝手记提示词采用蓝色像素风PROMPT卡片，普通代码窗�
   assert.match(html, /background-color:#1e6fff;color:#ffffff;[^>]*>PROMPT<\/span><span[^>]*>提示词<\/span>/);
   assert.match(html, /background-color:#1e6fff;color:#ffffff;[^>]*>PROMPT<\/span><span[^>]*>《片头》提示词<\/span>/);
   assert.equal((html.match(/>上下滑动 ↕<\/span>/g) || []).length, 2);
-  assert.match(html, /border:2px solid #5cb8ff;border-radius:4px;box-shadow:4px 4px 0 #d6ecff;/);
+  assert.match(html, /border:1px solid #c2e0ff;border-radius:8px;/);
+  assert.doesNotMatch(html, /border:1px solid #c2e0ff[^>]*box-shadow:/);
+  assert.match(html, /scrollbar-width:none;-ms-overflow-style:none;/);
+  assert.match(preview(html, '预览', []), /scrollbar-width:none"\]:{2}-webkit-scrollbar\{display:none/);
   assert.equal((html.match(/background-color:#e1f3ff/g) || []).length, 1);
   assert.match(html, /color:#4c87b3[^>]*>js<\/span>/);
   assert.match(html, /background-color:#ff5f56/);

@@ -170,7 +170,7 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     if (codeMaxHeight > 0) {
       const scrollCss = `max-height:${codeMaxHeight}px;overflow:auto;box-sizing:border-box;-webkit-overflow-scrolling:touch;`;
       custom.preBody += scrollCss;
-      if (custom.promptBody) custom.promptBody += scrollCss;
+      if (custom.promptBody) custom.promptBody += `${scrollCss}scrollbar-width:none;-ms-overflow-style:none;`;
     }
     const renderTheme = { ...selected, codeTheme: 'light', codeChrome: 'mac' };
     let html = stripPreviewMeta(renderMarkdown(source, renderTheme, { fontSize, linkFootnotes, galleryMode: 'stack', macCode: true, plainInlineText: true, readingTypography: true, avoidOrphans, custom }));
@@ -178,13 +178,13 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     // body copy; only an explicit Markdown blockquote should become a card.
     if (/\$\$|\$[^\n$]+\$/.test(source)) warnings.push('数学公式未转换为图片，请检查预览。');
     if (selected.id === 'mint-soda') html = html.replace(/<(th|td) style="([^"]*)">/g, '<$1 style="$2min-width:5.5em;">');
-    // 正文中的英文单词/技术标识符（如 WorkBuddy、huashu-design、_design）自动加粗，跳过代码块、标题、已有 strong、URL 与 HTML 实体。
-    const inlineStrongOpen = `<strong style="${escape(custom.strong || base.strong)}">`;
+    // 正文中的英文单词/技术标识符（如 WorkBuddy、huashu-design、_design）改用淡蓝色下划虚线标注，不自动加粗；跳过代码块、标题、已有加粗/高亮块、URL 与 HTML 实体。
+    const inlineEngOpen = '<span style="border-bottom:1.5px dashed #7ec8ff;padding-bottom:1px;font-family:inherit;font-size:inherit;line-height:inherit;vertical-align:baseline;">';
     html = html.replace(
-      /<svg\b[\s\S]*?<\/svg>|<code\b[\s\S]*?<\/code>|<h[1-6]\b[\s\S]*?<\/h[1-6]>|<strong\b[\s\S]*?<\/strong>|<section\b[^>]*font-weight:700[^>]*>[\s\S]*?<\/section>|<span\b[^>]*font-weight:[67]00[^>]*>[\s\S]*?<\/span>|<span\b[^>]*font-family:[^"]*monospace[^>]*>[\s\S]*?<\/span>|<p\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/p>|<a\b[\s\S]*?<\/a>|<[^>]+>|https?:\/\/[^\s<]+|(&[a-zA-Z0-9#]+;)|(_?[A-Za-z][A-Za-z0-9_.-]*(?: +[A-Za-z][A-Za-z0-9_.-]*)*)/g,
+      /<svg\b[\s\S]*?<\/svg>|<code\b[\s\S]*?<\/code>|<h[1-6]\b[\s\S]*?<\/h[1-6]>|<strong\b[\s\S]*?<\/strong>|<mark\b[\s\S]*?<\/mark>|<section\b[^>]*font-weight:700[^>]*>[\s\S]*?<\/section>|<span\b[^>]*font-weight:[67]00[^>]*>[\s\S]*?<\/span>|<span\b[^>]*font-family:[^"]*monospace[^>]*>[\s\S]*?<\/span>|<p\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/p>|<a\b[\s\S]*?<\/a>|<[^>]+>|https?:\/\/[^\s<]+|(&[a-zA-Z0-9#]+;)|(_?[A-Za-z][A-Za-z0-9_.-]*(?: +[A-Za-z][A-Za-z0-9_.-]*)*)/g,
       (match, _entity, eng) => {
         if (!eng || (eng.match(/[A-Za-z]/g) || []).length < 2) return match;
-        return `${inlineStrongOpen}${eng}</strong>`;
+        return `${inlineEngOpen}${eng}</span>`;
       }
     );
     // 个人简介仅加在导出末尾，默认上方带分隔横线并整句加粗（不套引用卡片）；源稿已有同一句结尾时不重复。
@@ -239,7 +239,7 @@ export function preview(html, title, warnings, introFile) {
   const introLink = introFile ? ` <a href="${escape(encodeURIComponent(path.basename(introFile)))}" download>单独下载片头 GIF</a>` : '';
   return `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)}</title>
 <style>body{margin:0;background:#f3f5f4;font-family:system-ui}header{position:sticky;top:0;background:white;padding:16px;z-index:1;border-bottom:1px solid #ddd}button{padding:10px 18px;cursor:pointer}article{max-width:677px;margin:24px auto;background:white;padding:24px}aside{max-width:720px;margin:auto;color:#765b16;font-size:14px}</style>
-<style>article section[style*="max-height:"][style*="overflow:auto"]{scrollbar-gutter:stable;scrollbar-color:#8bb7d7 #edf5fa}article section[style*="max-height:"][style*="overflow:auto"]::-webkit-scrollbar{width:8px}article section[style*="max-height:"][style*="overflow:auto"]::-webkit-scrollbar-track{background:#edf5fa}article section[style*="max-height:"][style*="overflow:auto"]::-webkit-scrollbar-thumb{background:#8bb7d7;border-radius:4px}</style>
+<style>article section[style*="scrollbar-width:none"]::-webkit-scrollbar{display:none;width:0;height:0}article section[style*="max-height:"][style*="overflow:auto"]:not([style*="scrollbar-width:none"]){scrollbar-gutter:stable;scrollbar-color:#8bb7d7 #edf5fa}article section[style*="max-height:"][style*="overflow:auto"]:not([style*="scrollbar-width:none"])::-webkit-scrollbar{width:8px}article section[style*="max-height:"][style*="overflow:auto"]:not([style*="scrollbar-width:none"])::-webkit-scrollbar-track{background:#edf5fa}article section[style*="max-height:"][style*="overflow:auto"]:not([style*="scrollbar-width:none"])::-webkit-scrollbar-thumb{background:#8bb7d7;border-radius:4px}</style>
 <header><button id="copy">复制完整公众号排版</button> <span id="status">复制保留全文与内联样式；图片、滚动效果需在微信粘贴后确认</span>${introLink}</header>
 <aside><details><summary>排版提示（${warnings.length}项）</summary>${warnings.map(w => `<p>${escape(w)}</p>`).join('')}</details></aside><article id="content">${html}</article>
 <script>
