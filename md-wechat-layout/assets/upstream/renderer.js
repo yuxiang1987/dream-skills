@@ -1043,8 +1043,11 @@ function createMd(theme, opts) {
     return `<td style="${escapeHtmlAttr(`${styles.td}${align}`)}">`
   }
 
-  md.renderer.rules.code_inline = (tokens, idx) =>
-    opts.plainInlineText ? esc(tokens[idx].content) : `<span style="${escapeHtmlAttr(styles.code)}">${esc(tokens[idx].content)}</span>`
+  md.renderer.rules.code_inline = (tokens, idx) => {
+    const content = esc(tokens[idx].content)
+    if (opts.custom?.inlineCodePill) return `<code style="${escapeHtmlAttr(opts.custom.inlineCodePill)}">${content}</code>`
+    return opts.plainInlineText ? content : `<span style="${escapeHtmlAttr(styles.code)}">${content}</span>`
+  }
 
   md.renderer.rules.code_block = (tokens, idx) => wrapCode(esc(tokens[idx].content), '', tokens[idx])
 

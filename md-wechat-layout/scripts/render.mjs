@@ -148,7 +148,8 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     for (const key of ['strong', 'em', 's', 'mark', 'a', 'code']) {
       custom[key] = `${withoutTextMetrics(custom[key])}font-family:inherit;font-size:inherit;line-height:inherit;vertical-align:baseline;`;
     }
-    custom.code += 'font-weight:inherit;';
+    const pillBackground = mistBlue ? '#e9f1f8' : selected.id === 'blue-journal' ? '#e1f3ff' : '#e4f2f8';
+    custom.inlineCodePill = `background-color:${pillBackground};border-radius:6px;padding:0 0.32em;font-family:inherit;font-size:inherit;font-weight:inherit;line-height:inherit;vertical-align:baseline;overflow-wrap:anywhere;`;
     const imageFinish = selected.id === 'blue-journal'
       ? 'border-radius:6px;box-shadow:0 5px 16px rgba(40,65,90,0.12),0 1px 4px rgba(40,65,90,0.06);'
       : selected.id === 'mint-soda'

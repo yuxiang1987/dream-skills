@@ -96,7 +96,7 @@ test('别名一致、重复渲染重置编号、格式化标题与多级标题�
     assert.equal(convert(input, { theme }).html, expected);
   }
   assert.equal((expected.match(/aria-hidden="true"/g) || []).length, 3);
-  assert.match(expected, />02<\/p><h2[^>]*>第二节<\/h2>/);
+  assert.match(expected, />02<\/p><h2[^>]*><code[^>]*background-color:#e1f3ff[^>]*>第二节<\/code><\/h2>/);
   assert.match(expected, />END<\/p><h2[^>]*>最后一节<\/h2>/);
   assert.match(expected, /<h3[^>]*>不编号<\/h3>/);
   for (const fontSize of [12, 18, 24]) {

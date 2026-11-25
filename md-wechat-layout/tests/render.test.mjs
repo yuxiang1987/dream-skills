@@ -89,12 +89,15 @@ test('列表及段落行内代码统一文本尺寸，正文关键英文添加�
   fs.writeFileSync(input, '- **Schema：工作规范。**本文写进 `AGENTS.md`。\n\n用 WorkBuddy 搭配 `huashu-design` 输出 `_design` 目录，可用 `[[笔记名]]`，安装到[官网](https://example.com/path)。\n\n```js\nconst WorkBuddy = 1;\n```');
   const html = convert(input, { theme: '雾蓝气泡' }).html;
   assert.doesNotMatch(html, /\*\*Schema|font-size:0.86em|<strong[^>]*>WorkBuddy/);
-  assert.match(html, /本文写进 AGENTS\.md。/);
-  for (const term of ['WorkBuddy', 'huashu-design', '_design']) {
-    assert.match(html, new RegExp(`<span style="[^"]*border-bottom:1\\.5px dashed #7ec8ff;[^"]*">${term}</span>`));
+  for (const term of ['AGENTS.md', 'huashu-design', '_design', '[[笔记名]]']) {
+    const node = [...html.matchAll(/<code style="([^"]*)">([^<]*)<\/code>/g)].find(match => match[2] === term);
+    assert.ok(node, term);
+    assert.match(node[1], /background-color:#e9f1f8;border-radius:6px;/);
+    assert.match(node[1], /line-height:inherit;vertical-align:baseline/);
   }
-  assert.match(html, /可用 \[\[笔记名\]\]，安装到官网。/);
-  assert.doesNotMatch(html, /<a\b|<span[^>]*>AGENTS.md|&<strong/);
+  assert.match(html, /<span style="[^"]*border-bottom:1\.5px dashed #7ec8ff;[^"]*">WorkBuddy<\/span>/);
+  assert.match(html, /安装到官网。/);
+  assert.doesNotMatch(html, /<a\b|&<strong/);
   assert.match(html, /<section[^>]*font-size:15px;line-height:28.5px[^>]*>•&nbsp;Schema/);
   assert.match(html, /<code[^>]*font-size:13px;line-height:1.7/);
 });
