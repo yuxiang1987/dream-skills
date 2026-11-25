@@ -669,6 +669,105 @@ def bounce_drop(
     )
 
 
+def grid_stagger(
+    cx: float,
+    cy: float,
+    cols: int = 7,
+    rows: int = 5,
+    gap: float = 18.0,
+    r: float = 4.2,
+    color: str = "#38BDF8",
+    t_start: float = 0.28,
+    step: float = 0.032,
+    dur: str = DUR,
+) -> str:
+    """Anime.js v4 gridStagger(from:'center') 风格：按欧氏距离从中心向外辐射脉冲点阵。"""
+    import math
+
+    mx, my = (cols - 1) / 2.0, (rows - 1) / 2.0
+    out: list[str] = []
+    for row in range(rows):
+        for col in range(cols):
+            px = cx + (col - mx) * gap
+            py = cy + (row - my) * gap
+            dist = math.hypot(col - mx, row - my)
+            t0 = min(0.80, t_start + dist * step)
+            t1 = min(0.84, t0 + 0.04)
+            t2 = min(0.88, t0 + 0.09)
+            kt = f"0;{t0:.3f};{t1:.3f};{t2:.3f};1"
+            dot = f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{r:.1f}" fill="{color}"/>'
+            out.append(scale_around(px, py, ".5;.5;1.45;.85;.85", kt, dot, dur=dur))
+    return "".join(out)
+
+
+def radial_dial(
+    cx: float,
+    cy: float,
+    r: float = 54.0,
+    segments: list[tuple[str, str]] | None = None,
+    t_start: float = 0.28,
+    dur: str = DUR,
+) -> str:
+    """Anime.js v4 精密表盘：径向刻度圈 + 分段彩色弧顺时针点亮。"""
+    import math
+
+    segs = segments or [
+        ("#F43F5E", "A"),
+        ("#F97316", "B"),
+        ("#EAB308", "C"),
+        ("#22C55E", "D"),
+        ("#06B6D4", "E"),
+        ("#3B82F6", "F"),
+    ]
+    ticks = []
+    for i in range(24):
+        ang = math.radians(i * 15)
+        r1 = r - 8
+        r2 = r - 2 if i % 2 == 0 else r - 5
+        x1, y1 = cx + r1 * math.cos(ang), cy + r1 * math.sin(ang)
+        x2, y2 = cx + r2 * math.cos(ang), cy + r2 * math.sin(ang)
+        ticks.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="#64748B" stroke-width="1.4"/>')
+
+    arcs = []
+    n = len(segs)
+    span_deg = 360.0 / n
+    arc_r = r + 7
+    for idx, (col, _) in enumerate(segs):
+        a0 = math.radians(-90 + idx * span_deg + 4)
+        a1 = math.radians(-90 + (idx + 1) * span_deg - 4)
+        x0, y0 = cx + arc_r * math.cos(a0), cy + arc_r * math.sin(a0)
+        x1, y1 = cx + arc_r * math.cos(a1), cy + arc_r * math.sin(a1)
+        d = f"M{x0:.1f} {y0:.1f} A{arc_r:.1f} {arc_r:.1f} 0 0 1 {x1:.1f} {y1:.1f}"
+        t0 = min(0.82, t_start + idx * 0.05)
+        t1 = min(0.86, t0 + 0.04)
+        arcs.append(
+            f'<path d="{d}" fill="none" stroke="{col}" stroke-width="4" stroke-linecap="round" opacity=".2">'
+            f'{smil_opacity(".2;.2;1;1", f"0;{t0:.3f};{t1:.3f};1", dur=dur)}</path>'
+        )
+    return f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#334155" stroke-width="1.5"/>{"".join(ticks)}{"".join(arcs)}'
+
+
+def spring_oscillate(
+    axis: str,
+    inner: str,
+    target: float = 0.0,
+    amp: float = 28.0,
+    t_start: float = 0.30,
+    dur: str = DUR,
+) -> str:
+    """Anime.js v4 createSpring 风格：围绕目标值做正负衰减阻尼震荡归位。"""
+    pts = [target + amp * 1.0, target - amp * 0.48, target + amp * 0.22, target - amp * 0.08, target]
+    ts = [t_start, t_start + 0.08, t_start + 0.14, t_start + 0.20, t_start + 0.26, min(0.90, t_start + 0.32)]
+    if axis == "rotate":
+        vals = ";".join([f"{pts[0]:.1f}", f"{pts[0]:.1f}"] + [f"{v:.1f}" for v in pts[1:]] + [f"{target:.1f}"])
+        kt = f"0;{';'.join(f'{t:.3f}' for t in ts)};1"
+        return f'<g>{smil_transform("rotate", vals, kt, spline="0.45 0 0.55 1", dur=dur)}{inner}</g>'
+    fmt = (lambda v: f"{v:.1f} 0") if axis == "x" else (lambda v: f"0 {v:.1f}")
+    vals = ";".join([fmt(pts[0]), fmt(pts[0])] + [fmt(v) for v in pts[1:]] + [fmt(target)])
+    kt = f"0;{';'.join(f'{t:.3f}' for t in ts)};1"
+    return f'<g>{smil_transform("translate", vals, kt, spline="0.45 0 0.55 1", dur=dur)}{inner}</g>'
+
+
 def load_brand_opener(dur: str = DUR) -> str:
     """加载预烘焙的「像素梦哥 + 16 组点阵字坍缩粒子」固定母版片段，支持同步主周期 dur。"""
     frag = OPENER_ASSET.read_text(encoding="utf-8")

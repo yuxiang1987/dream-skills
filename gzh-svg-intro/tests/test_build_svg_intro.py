@@ -92,6 +92,15 @@ class BuildSvgIntroTest(unittest.TestCase):
         self.assertIn("0.55 0 0.85 0.45", drop)
         self.assertIn("1.18 .84", drop)
 
+    def test_animejs_inspired_primitives(self):
+        grid = kit.grid_stagger(500, 110, cols=5, rows=3, dur="6s")
+        self.assertEqual(grid.count("<circle"), 15)
+        dial = kit.radial_dial(400, 110, r=48, dur="6s")
+        self.assertEqual(dial.count("<line"), 24)
+        self.assertEqual(dial.count("<path"), 6)
+        spring = kit.spring_oscillate("x", "<rect/>", dur="6s")
+        self.assertIn("type=\"translate\"", spring)
+
     def test_cli_generates_svg_and_preview_html(self):
         with tempfile.TemporaryDirectory() as tmp:
             out_svg = Path(tmp) / "intro.svg"
