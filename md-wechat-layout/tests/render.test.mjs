@@ -92,10 +92,10 @@ test('列表及段落行内代码统一文本尺寸，正文关键英文添加�
   for (const term of ['AGENTS.md', 'huashu-design', '_design', '[[笔记名]]']) {
     const node = [...html.matchAll(/<code style="([^"]*)">([^<]*)<\/code>/g)].find(match => match[2] === term);
     assert.ok(node, term);
-    assert.match(node[1], /background-color:#e9f1f8;border-radius:6px;/);
+    assert.match(node[1], /background-color:#e9f1f8;border:1\.5px dashed #517e9f;border-radius:2px;/);
     assert.match(node[1], /line-height:inherit;vertical-align:baseline/);
   }
-  assert.match(html, /<span style="[^"]*border-bottom:1\.5px dashed #7ec8ff;[^"]*">WorkBuddy<\/span>/);
+  assert.match(html, /<span style="[^"]*border-bottom:1\.5px dashed #517e9f;[^"]*">WorkBuddy<\/span>/);
   assert.match(html, /安装到官网。/);
   assert.doesNotMatch(html, /<a\b|&<strong/);
   assert.match(html, /<section[^>]*font-size:15px;line-height:28.5px[^>]*>•&nbsp;Schema/);

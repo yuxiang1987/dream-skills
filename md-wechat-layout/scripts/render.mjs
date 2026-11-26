@@ -148,8 +148,8 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     for (const key of ['strong', 'em', 's', 'mark', 'a', 'code']) {
       custom[key] = `${withoutTextMetrics(custom[key])}font-family:inherit;font-size:inherit;line-height:inherit;vertical-align:baseline;`;
     }
-    const pillBackground = mistBlue ? '#e9f1f8' : selected.id === 'blue-journal' ? '#e1f3ff' : '#e4f2f8';
-    custom.inlineCodePill = `background-color:${pillBackground};border-radius:6px;padding:0 0.32em;font-family:inherit;font-size:inherit;font-weight:inherit;line-height:inherit;vertical-align:baseline;overflow-wrap:anywhere;`;
+    const stampBackground = mistBlue ? '#e9f1f8' : selected.id === 'blue-journal' ? '#f0f7fa' : '#e4f2f8';
+    custom.inlineCodePill = `background-color:${stampBackground};border:1.5px dashed #517e9f;border-radius:2px;color:#244e6e;padding:0 0.34em;-webkit-box-decoration-break:clone;box-decoration-break:clone;font-family:inherit;font-size:inherit;font-weight:inherit;line-height:inherit;vertical-align:baseline;overflow-wrap:anywhere;`;
     const imageFinish = selected.id === 'blue-journal'
       ? 'border-radius:6px;box-shadow:0 5px 16px rgba(40,65,90,0.12),0 1px 4px rgba(40,65,90,0.06);'
       : selected.id === 'mint-soda'
@@ -180,7 +180,7 @@ export function convert(input, { theme = 'blue-journal', vault, fontSize = 15, l
     if (/\$\$|\$[^\n$]+\$/.test(source)) warnings.push('数学公式未转换为图片，请检查预览。');
     if (selected.id === 'mint-soda') html = html.replace(/<(th|td) style="([^"]*)">/g, '<$1 style="$2min-width:5.5em;">');
     // 正文中的英文单词/技术标识符（如 WorkBuddy、huashu-design、_design）改用淡蓝色下划虚线标注，不自动加粗；跳过代码块、标题、已有加粗/高亮块、URL 与 HTML 实体。
-    const inlineEngOpen = '<span style="border-bottom:1.5px dashed #7ec8ff;padding-bottom:1px;font-family:inherit;font-size:inherit;line-height:inherit;vertical-align:baseline;">';
+    const inlineEngOpen = '<span style="border-bottom:1.5px dashed #517e9f;padding-bottom:1px;font-family:inherit;font-size:inherit;line-height:inherit;vertical-align:baseline;">';
     html = html.replace(
       /<svg\b[\s\S]*?<\/svg>|<code\b[\s\S]*?<\/code>|<h[1-6]\b[\s\S]*?<\/h[1-6]>|<strong\b[\s\S]*?<\/strong>|<mark\b[\s\S]*?<\/mark>|<section\b[^>]*font-weight:700[^>]*>[\s\S]*?<\/section>|<span\b[^>]*font-weight:[67]00[^>]*>[\s\S]*?<\/span>|<span\b[^>]*font-family:[^"]*monospace[^>]*>[\s\S]*?<\/span>|<p\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/p>|<a\b[\s\S]*?<\/a>|<[^>]+>|https?:\/\/[^\s<]+|(&[a-zA-Z0-9#]+;)|(_?[A-Za-z][A-Za-z0-9_.-]*(?: +[A-Za-z][A-Za-z0-9_.-]*)*)/g,
       (match, _entity, eng) => {
