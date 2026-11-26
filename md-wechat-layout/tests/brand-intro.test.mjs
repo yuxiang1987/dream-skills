@@ -88,6 +88,10 @@ test('传入自定义 --intro-svg 时内嵌带蓝色圆角边框的 SVG+SMIL 片
   assert.ok(result.warnings.some(w=>w.includes('自定义 SVG+SMIL 片头')));
   const cli=fileURLToPath(new URL('../scripts/render.mjs',import.meta.url));
   const output=JSON.parse(execFileSync(process.execPath,[cli,input,'--intro-svg',svgFile,'--out',path.join(path.dirname(input),'svg-out')],{encoding:'utf8'}));
-  assert.ok(fs.readFileSync(output.fragment,'utf8').includes('aria-label="定制SVG片头"'));
+  const fragment = fs.readFileSync(output.fragment, 'utf8');
+  assert.equal(fragment.split(sampleSvg).length - 1, 1);
+  assert.ok(fragment.indexOf(sampleSvg) < fragment.indexOf('<h1'));
+  assert.ok(fragment.includes('正文内容。'));
+  assert.ok(fs.readFileSync(output.preview, 'utf8').includes(fragment));
   assert.equal(output.introGif,null);
 });
